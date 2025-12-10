@@ -12,14 +12,25 @@ def seed_data():
     conn = get_db_connection()
     cursor = conn.cursor()
 
-    # Aparatos
+    # Aparatos - Lista completa de máquinas del gimnasio
     aparatos = [
-        ("Cinta", "Cinta01"), ("Cinta", "Cinta02"),
-        ("Bicicleta", "Bici01"), ("Bicicleta", "Bici02"),
-        ("Pesas", "Prensa01"), ("Pesas", "JSmith01"),
-        ("Elíptica", "Eliptica01"), ("Elíptica", "Eliptica02"),
-        ("Remo", "Remo01"),
-        ("Escaladora", "Escaladora01")
+        # Cardio
+        ("Cinta", "Cinta01"), ("Cinta", "Cinta02"), ("Cinta", "Cinta03"), ("Cinta", "Cinta04"),
+        ("Bicicleta", "Bici01"), ("Bicicleta", "Bici02"), ("Bicicleta", "Bici03"), 
+        ("Bicicleta", "Bici04"), ("Bicicleta", "Bici05"),
+        ("Elíptica", "Eliptica01"), ("Elíptica", "Eliptica02"), ("Elíptica", "Eliptica03"),
+        ("Remo", "Remo01"), ("Remo", "Remo02"), ("Remo", "Remo03"),
+        ("Escaladora", "Escaladora01"), ("Escaladora", "Escaladora02"),
+        
+        # Pesas y Fuerza
+        ("Pesas", "Press Banca 01"), ("Pesas", "Press Banca 02"),
+        ("Pesas", "Leg Press 01"), ("Pesas", "Leg Press 02"),
+        ("Pesas", "Smith Machine 01"), ("Pesas", "Smith Machine 02"),
+        ("Pesas", "Dorsales 01"), ("Pesas", "Dorsales 02"),
+        ("Pesas", "Pectoral 01"), ("Pesas", "Hombros 01"),
+        ("Pesas", "Curl Bíceps 01"), ("Pesas", "Extensión Tríceps 01"),
+        ("Funcional", "TRX 01"), ("Funcional", "TRX 02"),
+        ("Funcional", "Kettlebells"), ("Funcional", "Battle Ropes")
     ]
     for tipo, nombre in aparatos:
         cursor.execute("INSERT OR IGNORE INTO aparato (tipo, nombre) VALUES (?, ?)", (tipo, nombre))
@@ -78,6 +89,37 @@ def seed_data():
     except Exception as e:
         print(f"⚠️ Error al crear admins: {e}")
 
+    # Reservas de ejemplo para mostrar máquinas ocupadas
+    print("\n🔄 Creando reservas de ejemplo...")
+    from models.sesion import Sesion
+    
+    reservas_ejemplo = [
+        # Cliente 1: Lunes
+        (1, 1, None, 0, "10:00"),   # Cinta01, Lunes 10:00
+        (1, 3, None, 0, "10:30"),   # Bici01, Lunes 10:30
+        # Cliente 2: Martes
+        (2, 2, None, 1, "18:00"),   # Cinta02, Martes 18:00
+        (2, 11, None, 1, "19:00"),  # Eliptica01, Martes 19:00
+        # Cliente 3: Miércoles
+        (3, 5, None, 2, "12:00"),   # Bici03, Miércoles 12:00
+        (3, 13, None, 2, "17:00"),  # Remo01, Miércoles 17:00
+        # Cliente 4: Jueves
+        (4, 17, None, 3, "15:00"),  # Press Banca 01, Jueves 15:00
+        (4, 19, None, 3, "16:00"),  # Leg Press 01, Jueves 16:00
+        # Cliente 5: Viernes
+        (5, 4, None, 4, "11:00"),   # Cinta04, Viernes 11:00
+        (5, 9, None, 4, "12:00"),   # Bici05, Viernes 12:00
+    ]
+    
+    for id_cliente, id_aparato, id_clase, dia, hora in reservas_ejemplo:
+        try:
+            Sesion.reservar(id_cliente, id_aparato=id_aparato, id_clase=id_clase, 
+                          dia_semana=dia, hora_inicio=hora)
+        except Exception as e:
+            pass  # Ignorar duplicados
+    
+    print(f"✅ {len(reservas_ejemplo)} reservas de ejemplo creadas.")
+    
     # Recibos del mes actual (diciembre 2025)
     # Solo generamos si no existen
     try:

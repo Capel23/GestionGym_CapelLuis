@@ -91,7 +91,7 @@ class ClientePanel:
         self.create_pagos_section(sections_frame)
     
     def create_aparatos_section(self, parent):
-        """Sección de aparatos de gimnasio"""
+        """Sección de aparatos de gimnasio con visualización mejorada"""
         card = tk.Frame(parent, bg=self.card_color, relief="raised", bd=1)
         card.grid(row=0, column=0, sticky="nsew", padx=5, pady=5)
         
@@ -108,67 +108,198 @@ class ClientePanel:
             fg="white"
         ).pack(pady=12)
         
-        # Contenido
-        content = tk.Frame(card, bg=self.card_color)
-        content.pack(fill="both", expand=True, padx=15, pady=15)
+        # Contenido con scroll
+        content_wrapper = tk.Frame(card, bg=self.card_color)
+        content_wrapper.pack(fill="both", expand=True, padx=10, pady=10)
+        
+        # Canvas para scroll
+        canvas = tk.Canvas(content_wrapper, bg=self.card_color, highlightthickness=0)
+        scrollbar = ttk.Scrollbar(content_wrapper, orient="vertical", command=canvas.yview)
+        scrollable_frame = tk.Frame(canvas, bg=self.card_color)
+        
+        scrollable_frame.bind(
+            "<Configure>",
+            lambda e: canvas.configure(scrollregion=canvas.bbox("all"))
+        )
+        
+        canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
+        canvas.configure(yscrollcommand=scrollbar.set)
+        
+        # Título de filtro
+        filter_frame = tk.Frame(scrollable_frame, bg=self.card_color)
+        filter_frame.pack(fill="x", pady=(0, 10))
         
         tk.Label(
-            content,
-            text="Máquinas disponibles:",
-            font=("Segoe UI", 10, "bold"),
+            filter_frame,
+            text="📋 Selecciona día para ver disponibilidad:",
+            font=("Segoe UI", 9, "bold"),
             bg=self.card_color,
             fg="#2c3e50"
-        ).pack(anchor="w", pady=(0, 5))
+        ).pack(side="left", padx=5)
         
-        # Lista de aparatos
-        list_frame = tk.Frame(content, bg=self.card_color)
-        list_frame.pack(fill="both", expand=True, pady=(0, 10))
+        self.dia_var = tk.StringVar(value="0")
+        dias = [("Lun", "0"), ("Mar", "1"), ("Mié", "2"), ("Jue", "3"), ("Vie", "4")]
         
-        scrollbar = ttk.Scrollbar(list_frame)
+        for texto, val in dias:
+            btn = tk.Radiobutton(
+                filter_frame,
+                text=texto,
+                variable=self.dia_var,
+                value=val,
+                font=("Segoe UI", 8),
+                bg=self.card_color,
+                activebackground=self.card_color,
+                selectcolor="#27ae60",
+                command=self.actualizar_disponibilidad_aparatos
+            )
+            btn.pack(side="left", padx=2)
+        
+        # Grid de máquinas
+        self.aparatos_grid = tk.Frame(scrollable_frame, bg=self.card_color)
+        self.aparatos_grid.pack(fill="both", expand=True)
+        
+        # Cargar máquinas
+        self.actualizar_disponibilidad_aparatos()
+        
+        canvas.pack(side="left", fill="both", expand=True)
         scrollbar.pack(side="right", fill="y")
         
-        self.aparatos_listbox = tk.Listbox(
-            list_frame,
-            font=("Segoe UI", 9),
-            bg="#f8f9fa",
-            fg="#2c3e50",
-            selectbackground="#3498db",
-            selectforeground="white",
-            relief="flat",
-            yscrollcommand=scrollbar.set
-        )
-        self.aparatos_listbox.pack(fill="both", expand=True)
-        scrollbar.config(command=self.aparatos_listbox.yview)
+        # Leyenda
+        legend_frame = tk.Frame(card, bg="#f8f9fa", relief="solid", bd=1)
+        legend_frame.pack(fill="x", padx=10, pady=(0, 10))
         
-        # Cargar aparatos
-        aparatos = Aparato.listar()
-        for ap in aparatos:
-            self.aparatos_listbox.insert(tk.END, f"  {ap.nombre} ({ap.tipo})")
-        
-        # Botón
-        tk.Button(
-            content,
-            text="📅 Reservar Aparato",
-            font=("Segoe UI", 10, "bold"),
-            bg="#27ae60",
-            fg="white",
-            activebackground="#229954",
-            activeforeground="white",
-            relief="flat",
-            padx=20,
-            pady=10,
-            cursor="hand2",
-            command=self.abrir_reserva_aparato
-        ).pack(fill="x", pady=(10, 0))
-        
-        # Info adicional
         tk.Label(
-            content,
-            text="Reserva por 30 minutos",
+            legend_frame,
+            text="🟢 Disponible  🟡 Parcial  🔴 Ocupado",
             font=("Segoe UI", 8),
-            bg=self.card_color,
-            fg="#7f8c8d"
-        ).pack(pady=(5, 0))
+            bg="#f8f9fa",
+            fg="#2c3e50"
+        ).pack(pady=5)
+    
+    def actualizar_disponibilidad_aparatos(self):
+        """Actualiza la visualización de aparatos según el día seleccionado"""
+        # Limpiar grid anterior
+        for widget in self.aparatos_grid.winfo_children():
+            widget.destroy()
+        
+        dia = int(self.dia_var.get())
+        aparatos = Aparato.listar()
+        
+        # Agrupar por tipo
+        aparatos_por_tipo = {}
+        for ap in aparatos:
+            if ap.tipo not in aparatos_por_tipo:
+                aparatos_por_tipo[ap.tipo] = []
+            aparatos_por_tipo[ap.tipo].append(ap)
+        
+        row = 0
+        for tipo, lista in sorted(aparatos_por_tipo.items()):
+            # Título del tipo
+            tipo_label = tk.Label(
+                self.aparatos_grid,
+                text=f"▸ {tipo}",
+                font=("Segoe UI", 10, "bold"),
+                bg=self.card_color,
+                fg="#34495e",
+                anchor="w"
+            )
+            tipo_label.grid(row=row, column=0, columnspan=2, sticky="w", pady=(10 if row > 0 else 0, 5), padx=5)
+            row += 1
+            
+            # Mostrar cada aparato
+            col = 0
+            for ap in lista:
+                # Calcular disponibilidad
+                horas_ocupadas = Sesion.horas_ocupadas_por_aparato(ap.id, dia)
+                total_franjas = 34  # 6:00 a 23:00 = 17 horas * 2 franjas
+                ocupacion = len(horas_ocupadas)
+                
+                # Determinar color según disponibilidad
+                if ocupacion == 0:
+                    color_bg = "#d4edda"  # Verde claro
+                    color_border = "#28a745"
+                    icono = "🟢"
+                    estado = "Libre"
+                elif ocupacion < 5:
+                    color_bg = "#fff3cd"  # Amarillo claro
+                    color_border = "#ffc107"
+                    icono = "🟡"
+                    estado = f"{ocupacion} reservas"
+                else:
+                    color_bg = "#f8d7da"  # Rojo claro
+                    color_border = "#dc3545"
+                    icono = "🔴"
+                    estado = "Muy ocupado"
+                
+                # Icono según tipo
+                if tipo == "Cinta":
+                    icono_tipo = "🏃"
+                elif tipo == "Bicicleta":
+                    icono_tipo = "🚴"
+                elif tipo in ["Elíptica", "Escaladora"]:
+                    icono_tipo = "🔄"
+                elif tipo == "Remo":
+                    icono_tipo = "🚣"
+                elif tipo == "Pesas":
+                    icono_tipo = "💪"
+                else:
+                    icono_tipo = "🏋️"
+                
+                # Card del aparato
+                card_frame = tk.Frame(
+                    self.aparatos_grid,
+                    bg=color_bg,
+                    relief="solid",
+                    bd=2,
+                    highlightbackground=color_border,
+                    highlightthickness=1
+                )
+                card_frame.grid(row=row, column=col, padx=5, pady=5, sticky="ew")
+                
+                # Contenido del card
+                tk.Label(
+                    card_frame,
+                    text=f"{icono_tipo} {ap.nombre}",
+                    font=("Segoe UI", 9, "bold"),
+                    bg=color_bg,
+                    fg="#2c3e50"
+                ).pack(anchor="w", padx=8, pady=(5, 0))
+                
+                tk.Label(
+                    card_frame,
+                    text=f"{icono} {estado}",
+                    font=("Segoe UI", 8),
+                    bg=color_bg,
+                    fg="#495057"
+                ).pack(anchor="w", padx=8, pady=(0, 5))
+                
+                # Botón de reservar
+                btn = tk.Button(
+                    card_frame,
+                    text="📅 Reservar",
+                    font=("Segoe UI", 8, "bold"),
+                    bg="#27ae60",
+                    fg="white",
+                    activebackground="#229954",
+                    relief="flat",
+                    cursor="hand2",
+                    command=lambda a=ap: self.abrir_ventana_reserva(a, "aparato")
+                )
+                btn.pack(fill="x", padx=5, pady=(0, 5))
+                
+                # Alternar columnas
+                col = 1 - col
+                if col == 0:
+                    row += 1
+            
+            # Si terminamos en columna 1, avanzar fila
+            if col == 1:
+                row += 1
+        
+        # Configurar grid para que las columnas sean iguales
+        self.aparatos_grid.columnconfigure(0, weight=1)
+        self.aparatos_grid.columnconfigure(1, weight=1)
+
     
     def create_clases_section(self, parent):
         """Sección de clases grupales"""
@@ -395,18 +526,6 @@ class ClientePanel:
             fg="#7f8c8d"
         ).pack(pady=(5, 0))
     
-    def abrir_reserva_aparato(self):
-        """Abrir ventana de reserva de aparatos"""
-        selection = self.aparatos_listbox.curselection()
-        if not selection:
-            messagebox.showwarning("⚠️", "Por favor, selecciona un aparato primero.")
-            return
-        
-        idx = selection[0]
-        aparatos = Aparato.listar()
-        aparato = aparatos[idx]
-        
-        self.abrir_ventana_reserva(aparato, "aparato")
     
     def abrir_reserva_clase(self):
         """Abrir ventana de reserva de clases"""
