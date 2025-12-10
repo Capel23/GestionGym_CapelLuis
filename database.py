@@ -55,6 +55,18 @@ def init_db():
         )
     ''')
 
+    # Horarios de clases (programación semanal)
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS clase_horario (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            id_clase INTEGER NOT NULL,
+            dia_semana INTEGER NOT NULL CHECK(dia_semana BETWEEN 0 AND 6),
+            hora_inicio TEXT NOT NULL,
+            FOREIGN KEY(id_clase) REFERENCES clase(id),
+            UNIQUE(id_clase, dia_semana, hora_inicio)
+        )
+    ''')
+
     # Sesiones (reservas: máquina O clase)
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS sesion (

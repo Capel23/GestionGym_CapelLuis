@@ -59,6 +59,12 @@ class Sesion:
         return [r['hora_inicio'] for r in rows]
 
     @classmethod
+    def validar_horario_clase(cls, id_clase, dia_semana, hora_inicio):
+        """Verifica que el horario existe en clase_horario antes de reservar"""
+        from models.clase_horario import ClaseHorario
+        return ClaseHorario.existe_horario(id_clase, dia_semana, hora_inicio)
+
+    @classmethod
     def listar_por_cliente(cls, id_cliente):
         """Devuelve todas las sesiones de un cliente (con info de aparato/clase)."""
         conn = get_db_connection()

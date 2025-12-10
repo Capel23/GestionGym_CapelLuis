@@ -4,6 +4,7 @@ from models.usuario import Usuario
 from models.cliente import Cliente
 from models.aparato import Aparato
 from models.clase import Clase
+from models.clase_horario import ClaseHorario
 from models.recibo import Recibo
 
 def seed_data():
@@ -15,7 +16,10 @@ def seed_data():
     aparatos = [
         ("Cinta", "Cinta01"), ("Cinta", "Cinta02"),
         ("Bicicleta", "Bici01"), ("Bicicleta", "Bici02"),
-        ("Pesas", "Prensa01"), ("Pesas", "JSmith01")
+        ("Pesas", "Prensa01"), ("Pesas", "JSmith01"),
+        ("Elíptica", "Eliptica01"), ("Elíptica", "Eliptica02"),
+        ("Remo", "Remo01"),
+        ("Escaladora", "Escaladora01")
     ]
     for tipo, nombre in aparatos:
         cursor.execute("INSERT OR IGNORE INTO aparato (tipo, nombre) VALUES (?, ?)", (tipo, nombre))
@@ -24,13 +28,34 @@ def seed_data():
     clases = [
         ("Spinning Energético", "Ana M.", 45, 10),
         ("Yoga Restaurativo", "Carlos R.", 60, 15),
-        ("HIIT Total", "Laura K.", 30, 12)
+        ("HIIT Total", "Laura K.", 30, 12),
+        ("Zumba Fitness", "María S.", 50, 20)
     ]
     for nombre, inst, dur, cap in clases:
         cursor.execute("""
             INSERT OR IGNORE INTO clase (nombre, instructor, duracion_min, capacidad)
             VALUES (?, ?, ?, ?)
         """, (nombre, inst, dur, cap))
+
+    # Horarios de clases (programación semanal)
+    # Días: 0=Lun, 1=Mar, 2=Mié, 3=Jue, 4=Vie
+    conn.commit()  # Commit para obtener los IDs
+    
+    horarios_clases = [
+        # Spinning Energético (id=1): Martes y Jueves 19:00
+        (1, 1, "19:00"), (1, 3, "19:00"),
+        # Yoga Restaurativo (id=2): Lunes, Miércoles y Viernes 18:00
+        (2, 0, "18:00"), (2, 2, "18:00"), (2, 4, "18:00"),
+        # HIIT Total (id=3): Lunes 20:00, Viernes 18:30
+        (3, 0, "20:00"), (3, 4, "18:30"),
+        # Zumba Fitness (id=4): Martes 18:30, Jueves 18:00, Viernes 19:30
+        (4, 1, "18:30"), (4, 3, "18:00"), (4, 4, "19:30")
+    ]
+    for id_clase, dia, hora in horarios_clases:
+        cursor.execute("""
+            INSERT OR IGNORE INTO clase_horario (id_clase, dia_semana, hora_inicio)
+            VALUES (?, ?, ?)
+        """, (id_clase, dia, hora))
 
     # Clientes + Usuarios
     clientes_data = [
