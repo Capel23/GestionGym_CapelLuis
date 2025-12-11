@@ -31,7 +31,7 @@ class Sesion:
             return True
         except Exception as e:
             if "UNIQUE constraint" in str(e):
-                return False  # Ya ocupado
+                return False 
             raise
         finally:
             conn.close()
@@ -77,7 +77,7 @@ class Sesion:
             ORDER BY s.dia_semana, s.hora_inicio
         """, (id_cliente,)).fetchall()
         conn.close()
-        return rows  # sqlite3.Row → accesible como dict
+        return rows
 
     @classmethod
     def listar_todas(cls, filtro_tipo=None, filtro_dia=None):

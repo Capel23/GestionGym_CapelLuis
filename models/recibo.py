@@ -89,7 +89,7 @@ class Recibo:
             ORDER BY c.nombre
         """, (mes, anio)).fetchall()
         conn.close()
-        return rows  # Lista de sqlite3.Row (accesible como dict)
+        return rows
 
     @classmethod
     def listar_todos(cls, filtro_estado=None, filtro_mes=None, filtro_anio=None, id_cliente=None):

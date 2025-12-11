@@ -23,12 +23,12 @@ class AdminPanel:
         notebook = ttk.Notebook(self.window)
         notebook.pack(fill="both", expand=True, padx=10, pady=10)
 
-        # Pestaña 1: Clientes (Mejorada)
+        # Pestaña 1: Clientes
         self.tab_clientes = ttk.Frame(notebook)
         notebook.add(self.tab_clientes, text="👥 Clientes")
         self.setup_clientes_tab()
 
-        # Pestaña 2: Reservas (NUEVA)
+        # Pestaña 2: Reservas
         self.tab_reservas = ttk.Frame(notebook)
         notebook.add(self.tab_reservas, text="📅 Reservas")
         self.setup_reservas_tab()
@@ -43,17 +43,16 @@ class AdminPanel:
         notebook.add(self.tab_clases, text="🧘 Clases")
         self.setup_clases_tab()
 
-        # Pestaña 5: Pagos (Mejorada, antes "Morosos")
+        # Pestaña 5: Pagos
         self.tab_pagos = ttk.Frame(notebook)
         notebook.add(self.tab_pagos, text="💰 Pagos y Recibos")
         self.setup_pagos_tab()
 
-    # ==================== PESTAÑA CLIENTES (MEJORADA) ====================
+    # ==================== PESTAÑA CLIENTES ====================
     def setup_clientes_tab(self):
         frame = ttk.Frame(self.tab_clientes, padding=15)
         frame.pack(fill="both", expand=True)
 
-        # Búsqueda
         search_frame = ttk.Frame(frame)
         search_frame.pack(fill="x", pady=(0, 10))
         ttk.Label(search_frame, text="🔍 Buscar:", font=("Segoe UI", 10, "bold")).pack(side="left", padx=5)
@@ -62,7 +61,6 @@ class AdminPanel:
         ttk.Entry(search_frame, textvariable=self.cliente_search_var, width=30).pack(side="left", padx=5)
         ttk.Button(search_frame, text="Limpiar", command=self.limpiar_busqueda_clientes).pack(side="left", padx=5)
 
-        # Tabla
         cols = ("ID", "Nombre", "Email", "Teléfono", "Activo", "Reservas", "Estado Pago")
         tree = ttk.Treeview(frame, columns=cols, show="headings", height=15)
         for col in cols:
@@ -78,7 +76,6 @@ class AdminPanel:
         tree.pack(fill="both", expand=True, pady=(0,10))
         self.cliente_tree = tree
 
-        # Botones
         btn_frame = ttk.Frame(frame)
         btn_frame.pack()
         ttk.Button(btn_frame, text="➕ Nuevo", command=self.nuevo_cliente).pack(side="left", padx=5)

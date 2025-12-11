@@ -14,7 +14,7 @@ class Usuario:
 
     @staticmethod
     def _hash_password(password):
-        salt = b"gym_salt_2025"  # Fijo para simplicidad (suficiente para proyecto)
+        salt = b"gym_salt_2025" 
         return hashlib.pbkdf2_hmac('sha256', password.encode(), salt, 100000).hex()
 
     @classmethod
@@ -33,14 +33,13 @@ class Usuario:
     @classmethod
     def create_cliente(cls, username, password, cliente):
         """Crea un cliente + su usuario. Devuelve el Usuario."""
-        # Validaciones básicas
+       
         if not validar_usuario(username):
             raise ValueError("Usuario inválido: 3-20 caracteres, solo letras y números.")
         if not password or len(password) < 4:
             raise ValueError("Contraseña inválida: mínimo 4 caracteres.")
 
-        # Crear cliente primero; si la inserción del usuario falla, eliminar el cliente creado
-        cliente_obj = Cliente.create(**cliente)  # cliente = dict con nombre, email, telefono
+        cliente_obj = Cliente.create(**cliente)  
         conn = get_db_connection()
         try:
             try:
@@ -52,7 +51,6 @@ class Usuario:
                 user_id = conn.execute("SELECT last_insert_rowid()").fetchone()[0]
                 return cls(user_id, username, 'cliente', cliente_obj.id)
             except Exception:
-                # Limpieza: eliminar cliente creado para evitar huérfanos
                 try:
                     Cliente.delete_by_id(cliente_obj.id)
                 except Exception:
