@@ -181,9 +181,34 @@ class LoginUI:
             self.create_register_fields()
         else:
             self.root.title("🔐 Iniciar Sesión - GymForTheMoment")
-            for widget in self.main_frame.winfo_children():
-                widget.destroy()
-            self.setup_ui()
+            # Destruir el frame principal completamente y recrearlo
+            self.main_frame.destroy()
+            self.main_frame = ttk.Frame(self.root, padding=20)
+            self.main_frame.pack(fill="both", expand=True)
+            
+            # Recrear logo/texto
+            ttk.Label(self.main_frame, text="🏋️ GymForTheMoment", 
+                      style='Header.TLabel').pack(pady=(0, 10))
+            ttk.Label(self.main_frame, text="Tu gimnasio, disponible 24/7", 
+                      style='Sub.TLabel').pack(pady=(0, 30))
+
+            # Campos de login
+            self.create_login_fields()
+
+            # Botones inferiores
+            btn_frame = ttk.Frame(self.main_frame)
+            btn_frame.pack(pady=20)
+            
+            self.login_btn = ttk.Button(btn_frame, text="🔐 Iniciar Sesión", command=self.login)
+            self.login_btn.pack(side="left", padx=5)
+            
+            self.toggle_btn = ttk.Button(btn_frame, text="✏️ Crear Cuenta", command=self.toggle_mode)
+            self.toggle_btn.pack(side="left", padx=5)
+            
+            # Toggle tema
+            theme_btn = ttk.Button(self.main_frame, text="🌓 Cambiar tema", 
+                                   command=lambda: toggle_theme(self.root), width=15)
+            theme_btn.pack(pady=(10, 0))
 
     def register(self):
         # Obtener datos

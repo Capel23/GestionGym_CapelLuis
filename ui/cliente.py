@@ -7,13 +7,14 @@ from models.sesion import Sesion
 from models.recibo import Recibo
 from utils import dia_a_nombre
 from auth import SesionActual
+from database import get_db_connection
 
 class ClientePanel:
     def __init__(self, root, usuario):
         self.usuario = usuario
         self.window = tk.Toplevel(root)
         self.window.title(f"GymForTheMoment - Panel de {usuario.username}")
-        self.window.geometry("1000x700")
+        self.window.geometry("1500x700")
         self.window.protocol("WM_DELETE_WINDOW", self.on_close)
         
         # Color scheme
@@ -302,7 +303,7 @@ class ClientePanel:
 
     
     def create_clases_section(self, parent):
-        """Sección de clases grupales"""
+        """Sección de clases grupales con visualización mejorada"""
         card = tk.Frame(parent, bg=self.card_color, relief="raised", bd=1)
         card.grid(row=0, column=1, sticky="nsew", padx=5, pady=5)
         
@@ -319,98 +320,182 @@ class ClientePanel:
             fg="white"
         ).pack(pady=12)
         
-        # Contenido
-        content = tk.Frame(card, bg=self.card_color)
-        content.pack(fill="both", expand=True, padx=15, pady=15)
+        # Contenido con scroll
+        content_wrapper = tk.Frame(card, bg=self.card_color)
+        content_wrapper.pack(fill="both", expand=True, padx=10, pady=10)
         
-        tk.Label(
-            content,
-            text="Horarios disponibles:",
-            font=("Segoe UI", 10, "bold"),
-            bg=self.card_color,
-            fg="#2c3e50"
-        ).pack(anchor="w", pady=(0, 5))
+        # Canvas para scroll
+        canvas = tk.Canvas(content_wrapper, bg=self.card_color, highlightthickness=0)
+        scrollbar = ttk.Scrollbar(content_wrapper, orient="vertical", command=canvas.yview)
+        scrollable_frame = tk.Frame(canvas, bg=self.card_color)
         
-        # Lista de clases con horarios
-        list_frame = tk.Frame(content, bg=self.card_color)
-        list_frame.pack(fill="both", expand=True, pady=(0, 10))
+        scrollable_frame.bind(
+            "<Configure>",
+            lambda e: canvas.configure(scrollregion=canvas.bbox("all"))
+        )
         
-        scrollbar = ttk.Scrollbar(list_frame)
+        canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
+        canvas.configure(yscrollcommand=scrollbar.set)
+        
+        # Grid de clases
+        self.clases_grid = tk.Frame(scrollable_frame, bg=self.card_color)
+        self.clases_grid.pack(fill="both", expand=True)
+        
+        # Cargar clases
+        self.actualizar_disponibilidad_clases()
+        
+        canvas.pack(side="left", fill="both", expand=True)
         scrollbar.pack(side="right", fill="y")
         
-        self.clases_listbox = tk.Listbox(
-            list_frame,
-            font=("Segoe UI", 9),
-            bg="#f8f9fa",
-            fg="#2c3e50",
-            selectbackground="#9b59b6",
-            selectforeground="white",
-            relief="flat",
-            yscrollcommand=scrollbar.set
-        )
-        self.clases_listbox.pack(fill="both", expand=True)
-        scrollbar.config(command=self.clases_listbox.yview)
+        # Leyenda
+        legend_frame = tk.Frame(card, bg="#f8f9fa", relief="solid", bd=1)
+        legend_frame.pack(fill="x", padx=10, pady=(0, 10))
         
-        # Cargar clases con horarios
-        from models.clase_horario import ClaseHorario
+        tk.Label(
+            legend_frame,
+            text="🟢 Plazas disponibles  🟡 Pocas plazas  🔴 Completo",
+            font=("Segoe UI", 8),
+            bg="#f8f9fa",
+            fg="#2c3e50"
+        ).pack(pady=5)
+    
+    def actualizar_disponibilidad_clases(self):
+        """Actualiza la visualización de clases con disponibilidad"""
+        # Limpiar grid anterior
+        for widget in self.clases_grid.winfo_children():
+            widget.destroy()
+        
         clases = Clase.listar()
         
-        # Diccionario para mapear clase -> horarios
-        self.clase_horarios_map = {}
-        
-        for c in clases:
-            horarios = ClaseHorario.listar_por_clase(c.id)
-            if horarios:
-                # Agrupar horarios por día
-                dias_dict = {}
-                for h in horarios:
-                    dia_nombre = dia_a_nombre(h.dia_semana)[:3]  # Lun, Mar, etc
-                    if dia_nombre not in dias_dict:
-                        dias_dict[dia_nombre] = []
-                    dias_dict[dia_nombre].append(h.hora_inicio)
-                
-                # Formatear horarios
-                horarios_str = ", ".join([f"{dia} {':'.join(horas)}" for dia, horas in dias_dict.items()])
-                
-                self.clases_listbox.insert(tk.END, f"  🏃 {c.nombre}")
-                self.clases_listbox.insert(tk.END, f"     ⏰ {horarios_str}")
-                self.clases_listbox.insert(tk.END, f"     👨‍🏫 {c.instructor} | ⏱ {c.duracion_min} min")
-                self.clases_listbox.insert(tk.END, "")
-                
-                # Guardar mapeo para usar al reservar
-                self.clase_horarios_map[c.id] = horarios
+        row = 0
+        for clase in clases:
+            # Calcular plazas ocupadas (contar reservas únicas por cliente para esta clase)
+            conn = get_db_connection()
+            reservas_count = conn.execute("""
+                SELECT COUNT(DISTINCT id_cliente) as count
+                FROM sesion
+                WHERE id_clase = ?
+            """, (clase.id,)).fetchone()['count']
+            conn.close()
+            
+            plazas_ocupadas = reservas_count
+            plazas_disponibles = clase.capacidad - plazas_ocupadas
+            
+            # Determinar color según disponibilidad
+            porcentaje_ocupacion = (plazas_ocupadas / clase.capacidad) * 100 if clase.capacidad > 0 else 100
+            
+            if porcentaje_ocupacion < 50:
+                color_bg = "#d4edda"  # Verde claro
+                color_border = "#28a745"
+                icono = "🟢"
+                estado = f"{plazas_disponibles} plazas libres"
+            elif porcentaje_ocupacion < 90:
+                color_bg = "#fff3cd"  # Amarillo claro
+                color_border = "#ffc107"
+                icono = "🟡"
+                estado = f"{plazas_disponibles} plazas"
             else:
-                # Clase sin horarios programados (mostrar info genérica)
-                self.clases_listbox.insert(tk.END, f"  {c.nombre}")
-                self.clases_listbox.insert(tk.END, f"     Instructor: {c.instructor}")
-                self.clases_listbox.insert(tk.END, f"     Duración: {c.duracion_min} min")
-                self.clases_listbox.insert(tk.END, "")
-                self.clase_horarios_map[c.id] = []
+                color_bg = "#f8d7da"  # Rojo claro
+                color_border = "#dc3545"
+                icono = "🔴"
+                estado = "Casi completo" if plazas_disponibles > 0 else "Completo"
+            
+            # Icono según tipo de clase
+            iconos_clase = {
+                "Yoga": "🧘",
+                "Pilates": "🤸",
+                "Spinning": "🚴",
+                "Zumba": "💃",
+                "CrossFit": "🏋️",
+                "Aeróbic": "🤾",
+                "Boxeo": "🥊",
+                "HIIT": "⚡"
+            }
+            icono_clase = iconos_clase.get(clase.nombre, "🏃")
+            
+            # Card de la clase
+            card_frame = tk.Frame(
+                self.clases_grid,
+                bg=color_bg,
+                relief="solid",
+                bd=2,
+                highlightbackground=color_border,
+                highlightthickness=1
+            )
+            card_frame.grid(row=row, column=0, columnspan=2, padx=5, pady=5, sticky="ew")
+            
+            # Contenido del card - Header
+            header_frame = tk.Frame(card_frame, bg=color_bg)
+            header_frame.pack(fill="x", padx=8, pady=(5, 0))
+            
+            tk.Label(
+                header_frame,
+                text=f"{icono_clase} {clase.nombre}",
+                font=("Segoe UI", 10, "bold"),
+                bg=color_bg,
+                fg="#2c3e50"
+            ).pack(side="left")
+            
+            tk.Label(
+                header_frame,
+                text=f"{icono} {estado}",
+                font=("Segoe UI", 8, "bold"),
+                bg=color_bg,
+                fg="#495057"
+            ).pack(side="right")
+            
+            # Info del instructor y duración
+            info_frame = tk.Frame(card_frame, bg=color_bg)
+            info_frame.pack(fill="x", padx=8, pady=(2, 0))
+            
+            tk.Label(
+                info_frame,
+                text=f"👨‍🏫 {clase.instructor}",
+                font=("Segoe UI", 8),
+                bg=color_bg,
+                fg="#495057"
+            ).pack(side="left", padx=(0, 10))
+            
+            tk.Label(
+                info_frame,
+                text=f"⏱ {clase.duracion_min} min",
+                font=("Segoe UI", 8),
+                bg=color_bg,
+                fg="#495057"
+            ).pack(side="left")
+            
+            tk.Label(
+                info_frame,
+                text=f"💺 Capacidad: {clase.capacidad}",
+                font=("Segoe UI", 8),
+                bg=color_bg,
+                fg="#495057"
+            ).pack(side="left", padx=(10, 0))
+            
+            # Botón de apuntarse
+            btn_enabled = plazas_disponibles > 0
+            btn_bg = "#9b59b6" if btn_enabled else "#95a5a6"
+            btn_hover = "#8e44ad" if btn_enabled else "#95a5a6"
+            btn_text = "📝 Reservar" if btn_enabled else "🚫 Completo"
+            
+            btn = tk.Button(
+                card_frame,
+                text=btn_text,
+                font=("Segoe UI", 8, "bold"),
+                bg=btn_bg,
+                fg="white",
+                activebackground=btn_hover,
+                relief="flat",
+                cursor="hand2" if btn_enabled else "arrow",
+                state="normal" if btn_enabled else "disabled",
+                command=lambda c=clase: self.abrir_ventana_reserva(c, "clase")
+            )
+            btn.pack(fill="x", padx=5, pady=(3, 5))
+            
+            row += 1
         
-        # Botón
-        tk.Button(
-            content,
-            text="📝 Apuntarse a Clase",
-            font=("Segoe UI", 10, "bold"),
-            bg="#9b59b6",
-            fg="white",
-            activebackground="#8e44ad",
-            activeforeground="white",
-            relief="flat",
-            padx=20,
-            pady=10,
-            cursor="hand2",
-            command=self.abrir_reserva_clase
-        ).pack(fill="x", pady=(10, 0))
-        
-        # Info adicional
-        tk.Label(
-            content,
-            text="Reserva tu plaza ahora",
-            font=("Segoe UI", 8),
-            bg=self.card_color,
-            fg="#7f8c8d"
-        ).pack(pady=(5, 0))
+        # Configurar grid
+        self.clases_grid.columnconfigure(0, weight=1)
     
     def create_pagos_section(self, parent):
         """Sección de pagos y cuotas"""
@@ -527,27 +612,6 @@ class ClientePanel:
         ).pack(pady=(5, 0))
     
     
-    def abrir_reserva_clase(self):
-        """Abrir ventana de reserva de clases"""
-        # Filtrar solo las líneas que contienen el nombre de la clase (no las de detalles)
-        selection = self.clases_listbox.curselection()
-        if not selection:
-            messagebox.showwarning("⚠️", "Por favor, selecciona una clase primero.")
-            return
-        
-        # Obtener la selección y encontrar la clase correspondiente
-        idx = selection[0]
-        clases = Clase.listar()
-        
-        # Cada clase ocupa 4 líneas en el listbox (nombre, instructor, duración, vacía)
-        clase_idx = idx // 4
-        if clase_idx >= len(clases):
-            messagebox.showwarning("⚠️", "Por favor, selecciona una clase válida.")
-            return
-            
-        clase = clases[clase_idx]
-        self.abrir_ventana_reserva(clase, "clase")
-    
     def abrir_ventana_reserva(self, item, tipo):
         """Ventana modal para reservar"""
         ventana = tk.Toplevel(self.window)
@@ -574,43 +638,7 @@ class ClientePanel:
         content = tk.Frame(ventana, bg="white", padx=20, pady=20)
         content.pack(fill="both", expand=True)
         
-        # Si es clase, obtener horarios programados
-        if tipo == "clase":
-            from models.clase_horario import ClaseHorario
-            horarios_programados = ClaseHorario.listar_por_clase(item.id)
-            
-            if not horarios_programados:
-                tk.Label(
-                    content,
-                    text="⚠️ Esta clase no tiene horarios programados aún.",
-                    font=("Segoe UI", 10),
-                    bg="white",
-                    fg="#e74c3c"
-                ).pack(pady=50)
-                
-                tk.Button(
-                    content,
-                    text="Cerrar",
-                    font=("Segoe UI", 10),
-                    bg="#95a5a6",
-                    fg="white",
-                    relief="flat",
-                    padx=20,
-                    pady=10,
-                    command=ventana.destroy
-                ).pack()
-                return
-            
-            # Agrupar por día/hora
-            horarios_disponibles = {}
-            for h in horarios_programados:
-                dia = h.dia_semana
-                hora = h.hora_inicio
-                if dia not in horarios_disponibles:
-                    horarios_disponibles[dia] = []
-                horarios_disponibles[dia].append(hora)
-        
-        # Selector de día/hora
+        # Selector de día (igual para ambos tipos)
         tk.Label(
             content,
             text="Selecciona día y hora:",
@@ -618,84 +646,58 @@ class ClientePanel:
             bg="white"
         ).pack(anchor="w", pady=(0, 10))
         
-        dia_var = tk.StringVar()
-        hora_var = tk.StringVar()
+        dia_frame = tk.Frame(content, bg="white")
+        dia_frame.pack(fill="x", pady=(0, 15))
         
-        if tipo == "clase":
-            # Mostrar solo días/horas programadas
-            for dia in sorted(horarios_disponibles.keys()):
-                dia_nombre = dia_a_nombre(dia)
-                for hora in horarios_disponibles[dia]:
-                    rb = ttk.Radiobutton(
-                        content,
-                        text=f"{dia_nombre} a las {hora}",
-                        variable=dia_var,
-                        value=f"{dia}|{hora}"
-                    )
-                    rb.pack(anchor="w", pady=2)
-            
-            if horarios_disponibles:
-                primer_dia = sorted(horarios_disponibles.keys())[0]
-                primera_hora = horarios_disponibles[primer_dia][0]
-                dia_var.set(f"{primer_dia}|{primera_hora}")
-        else:
-            # Para aparatos, selector tradicional
-            dia_frame = tk.Frame(content, bg="white")
-            dia_frame.pack(fill="x", pady=(0, 15))
-            
-            dia_num_var = tk.StringVar(value="0")
-            dias = [("Lun", "0"), ("Mar", "1"), ("Mié", "2"), ("Jue", "3"), ("Vie", "4")]
-            for texto, val in dias:
-                ttk.Radiobutton(
-                    dia_frame,
-                    text=texto,
-                    variable=dia_num_var,
-                    value=val,
-                    command=lambda: actualizar_horas()
-                ).pack(side="left", padx=5)
-            
-            tk.Label(
-                content,
-                text="Selecciona la hora:",
-                font=("Segoe UI", 11, "bold"),
-                bg="white"
-            ).pack(anchor="w", pady=(0, 10))
-            
-            hora_combo = ttk.Combobox(
-                content,
-                textvariable=hora_var,
-                state="readonly",
-                width=15,
-                font=("Segoe UI", 10)
-            )
-            hora_combo.pack(fill="x", pady=(0, 20))
-            
-            def actualizar_horas():
-                dia = int(dia_num_var.get())
+        dia_num_var = tk.StringVar(value="0")
+        dias = [("Lun", "0"), ("Mar", "1"), ("Mié", "2"), ("Jue", "3"), ("Vie", "4")]
+        for texto, val in dias:
+            ttk.Radiobutton(
+                dia_frame,
+                text=texto,
+                variable=dia_num_var,
+                value=val,
+                command=lambda: actualizar_horas()
+            ).pack(side="left", padx=5)
+        
+        tk.Label(
+            content,
+            text="Selecciona la hora:",
+            font=("Segoe UI", 11, "bold"),
+            bg="white"
+        ).pack(anchor="w", pady=(0, 10))
+        
+        hora_var = tk.StringVar()
+        hora_combo = ttk.Combobox(
+            content,
+            textvariable=hora_var,
+            state="readonly",
+            width=15,
+            font=("Segoe UI", 10)
+        )
+        hora_combo.pack(fill="x", pady=(0, 20))
+        
+        def actualizar_horas():
+            dia = int(dia_num_var.get())
+            if tipo == "aparato":
                 ocupadas = Sesion.horas_ocupadas_por_aparato(item.id, dia)
-                todas_franjas = [f"{h:02d}:{m:02d}" for h in range(6, 23) for m in (0, 30)]
-                libres = [h for h in todas_franjas if h not in ocupadas]
-                hora_combo['values'] = libres
-                hora_combo.set(libres[0] if libres else "")
+            else:
+                ocupadas = Sesion.horas_ocupadas_por_clase(item.id, dia)
             
-            actualizar_horas()
+            todas_franjas = [f"{h:02d}:{m:02d}" for h in range(6, 23) for m in (0, 30)]
+            libres = [h for h in todas_franjas if h not in ocupadas]
+            hora_combo['values'] = libres
+            hora_combo.set(libres[0] if libres else "")
+        
+        actualizar_horas()
         
         # Botones
         btn_frame = tk.Frame(content, bg="white")
         btn_frame.pack(fill="x", pady=(10, 0))
         
         def confirmar_reserva():
-            if tipo == "clase":
-                seleccion = dia_var.get()
-                if not seleccion:
-                    messagebox.showwarning("⚠️", "Selecciona un horario.")
-                    return
-                
-                dia, hora = seleccion.split("|")
-                dia = int(dia)
-            else:
-                hora = hora_var.get()
-                dia = int(dia_num_var.get())
+            hora = hora_var.get()
+            dia = int(dia_num_var.get())
             
             if not hora:
                 messagebox.showwarning("⚠️", "Selecciona una hora.")
@@ -720,9 +722,14 @@ class ClientePanel:
                 if exito:
                     messagebox.showinfo(
                         "✅",
-                        f"¡Reserva confirmada!\\n{dia_a_nombre(dia)} a las {hora}"
+                        f"¡Reserva confirmada!\n{dia_a_nombre(dia)} a las {hora}"
                     )
                     ventana.destroy()
+                    # Actualizar la vista
+                    if tipo == "clase":
+                        self.actualizar_disponibilidad_clases()
+                    else:
+                        self.actualizar_disponibilidad_aparatos()
                 else:
                     messagebox.showerror("❌", "Horario ya ocupado. Intenta con otro.")
             except Exception as e:
