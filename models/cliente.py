@@ -50,3 +50,73 @@ class Cliente:
             conn.commit()
         finally:
             conn.close()
+
+    @classmethod
+    def update(cls, cliente_id, nombre=None, email=None, telefono=None):
+        """Actualiza datos de un cliente. Solo actualiza los campos proporcionados."""
+        conn = get_db_connection()
+        try:
+            updates = []
+            params = []
+            
+            if nombre is not None:
+                updates.append("nombre = ?")
+                params.append(nombre)
+            if email is not None:
+                updates.append("email = ?")
+                params.append(email)
+            if telefono is not None:
+                updates.append("telefono = ?")
+                params.append(telefono)
+            
+            if not updates:
+                return False
+            
+            params.append(cliente_id)
+            query = f"UPDATE cliente SET {', '.join(updates)} WHERE id = ?"
+            conn.execute(query, params)
+            conn.commit()
+            return True
+        except Exception as e:
+            raise Exception(f"Error al actualizar cliente: {e}")
+        finally:
+            conn.close()
+
+    @classmethod
+    def dar_de_baja(cls, cliente_id):
+        """Marca un cliente como inactivo (soft delete)."""
+        conn = get_db_connection()
+        try:
+            conn.execute("UPDATE cliente SET activo = 0 WHERE id = ?", (cliente_id,))
+            conn.commit()
+            return True
+        finally:
+            conn.close()
+
+    @classmethod
+    def listar_todos(cls, incluir_inactivos=False):
+        """Lista todos los clientes, opcionalmente incluyendo inactivos."""
+        conn = get_db_connection()
+        if incluir_inactivos:
+            rows = conn.execute("SELECT * FROM cliente ORDER BY nombre").fetchall()
+        else:
+            rows = conn.execute("SELECT * FROM cliente WHERE activo = 1 ORDER BY nombre").fetchall()
+        conn.close()
+        return [cls(r['id'], r['nombre'], r['email'], r['telefono'], r['activo']) for r in rows]
+
+    @classmethod
+    def buscar(cls, termino):
+        """Busca clientes por nombre, email o teléfono."""
+        conn = get_db_connection()
+        termino_like = f"%{termino}%"
+        rows = conn.execute("""
+            SELECT * FROM cliente 
+            WHERE activo = 1 AND (
+                nombre LIKE ? OR 
+                email LIKE ? OR 
+                telefono LIKE ?
+            )
+            ORDER BY nombre
+        """, (termino_like, termino_like, termino_like)).fetchall()
+        conn.close()
+        return [cls(r['id'], r['nombre'], r['email'], r['telefono'], r['activo']) for r in rows]

@@ -78,3 +78,84 @@ class Sesion:
         """, (id_cliente,)).fetchall()
         conn.close()
         return rows  # sqlite3.Row → accesible como dict
+
+    @classmethod
+    def listar_todas(cls, filtro_tipo=None, filtro_dia=None):
+        """Lista todas las reservas con filtros opcionales.
+        
+        Args:
+            filtro_tipo: 'aparato', 'clase' o None para todos
+            filtro_dia: número de día (0-4) o None para todos
+        """
+        conn = get_db_connection()
+        
+        query = """
+            SELECT s.id, s.id_cliente, s.id_aparato, s.id_clase,
+                   s.dia_semana, s.hora_inicio, s.fecha_reserva,
+                   c.nombre AS cliente_nombre,
+                   a.nombre AS aparato_nombre, a.tipo AS aparato_tipo,
+                   cl.nombre AS clase_nombre
+            FROM sesion s
+            JOIN cliente c ON s.id_cliente = c.id
+            LEFT JOIN aparato a ON s.id_aparato = a.id
+            LEFT JOIN clase cl ON s.id_clase = cl.id
+            WHERE 1=1
+        """
+        
+        params = []
+        
+        if filtro_tipo == 'aparato':
+            query += " AND s.id_aparato IS NOT NULL"
+        elif filtro_tipo == 'clase':
+            query += " AND s.id_clase IS NOT NULL"
+        
+        if filtro_dia is not None:
+            query += " AND s.dia_semana = ?"
+            params.append(filtro_dia)
+        
+        query += " ORDER BY s.dia_semana, s.hora_inicio"
+        
+        rows = conn.execute(query, params).fetchall()
+        conn.close()
+        return rows
+
+    @classmethod
+    def cancelar(cls, sesion_id):
+        """Cancela una reserva por ID. Retorna True si tuvo éxito."""
+        conn = get_db_connection()
+        try:
+            cursor = conn.cursor()
+            cursor.execute("DELETE FROM sesion WHERE id = ?", (sesion_id,))
+            conn.commit()
+            return cursor.rowcount > 0
+        finally:
+            conn.close()
+
+    @classmethod
+    def get_by_id(cls, sesion_id):
+        """Obtiene una sesión por ID con toda la información."""
+        conn = get_db_connection()
+        row = conn.execute("""
+            SELECT s.*, c.nombre AS cliente_nombre,
+                   a.nombre AS aparato_nombre, a.tipo AS aparato_tipo,
+                   cl.nombre AS clase_nombre
+            FROM sesion s
+            JOIN cliente c ON s.id_cliente = c.id
+            LEFT JOIN aparato a ON s.id_aparato = a.id
+            LEFT JOIN clase cl ON s.id_clase = cl.id
+            WHERE s.id = ?
+        """, (sesion_id,)).fetchone()
+        conn.close()
+        return row
+
+    @classmethod
+    def contar_por_cliente(cls, id_cliente):
+        """Cuenta reservas activas de un cliente."""
+        conn = get_db_connection()
+        count = conn.execute("""
+            SELECT COUNT(*) as total
+            FROM sesion
+            WHERE id_cliente = ?
+        """, (id_cliente,)).fetchone()['total']
+        conn.close()
+        return count

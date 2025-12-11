@@ -50,16 +50,28 @@ class Recibo:
         return rows
 
     @classmethod
-    def marcar_pagado(cls, id_cliente, mes, anio):
-        """Marca un recibo como pagado."""
+    def marcar_pagado(cls, id_cliente, mes, anio, fecha_pago=None):
+        """Marca un recibo como pagado. Retorna True si tuvo éxito."""
         conn = get_db_connection()
-        conn.execute("""
-            UPDATE recibo
-            SET pagado = 1, fecha_pago = date('now')
-            WHERE id_cliente = ? AND mes = ? AND anio = ?
-        """, (id_cliente, mes, anio))
-        conn.commit()
-        conn.close()
+        try:
+            if fecha_pago:
+                conn.execute("""
+                    UPDATE recibo
+                    SET pagado = 1, fecha_pago = ?
+                    WHERE id_cliente = ? AND mes = ? AND anio = ?
+                """, (fecha_pago, id_cliente, mes, anio))
+            else:
+                conn.execute("""
+                    UPDATE recibo
+                    SET pagado = 1, fecha_pago = date('now')
+                    WHERE id_cliente = ? AND mes = ? AND anio = ?
+                """, (id_cliente, mes, anio))
+            conn.commit()
+            return True
+        except:
+            return False
+        finally:
+            conn.close()
 
     @classmethod
     def listar_morosos(cls, mes=None, anio=None):
@@ -78,3 +90,60 @@ class Recibo:
         """, (mes, anio)).fetchall()
         conn.close()
         return rows  # Lista de sqlite3.Row (accesible como dict)
+
+    @classmethod
+    def listar_todos(cls, filtro_estado=None, filtro_mes=None, filtro_anio=None, id_cliente=None):
+        """Lista todos los recibos con filtros opcionales.
+        
+        Args:
+            filtro_estado: 'pagado', 'pendiente' o None para todos
+            filtro_mes: mes específico o None
+            filtro_anio: año específico o None
+            id_cliente: ID de cliente específico o None
+        """
+        conn = get_db_connection()
+        
+        query = """
+            SELECT r.*, c.nombre AS cliente_nombre, c.email AS cliente_email
+            FROM recibo r
+            JOIN cliente c ON r.id_cliente = c.id
+            WHERE 1=1
+        """
+        
+        params = []
+        
+        if filtro_estado == 'pagado':
+            query += " AND r.pagado = 1"
+        elif filtro_estado == 'pendiente':
+            query += " AND r.pagado = 0"
+        
+        if filtro_mes is not None:
+            query += " AND r.mes = ?"
+            params.append(filtro_mes)
+        
+        if filtro_anio is not None:
+            query += " AND r.anio = ?"
+            params.append(filtro_anio)
+        
+        if id_cliente is not None:
+            query += " AND r.id_cliente = ?"
+            params.append(id_cliente)
+        
+        query += " ORDER BY r.anio DESC, r.mes DESC, c.nombre"
+        
+        rows = conn.execute(query, params).fetchall()
+        conn.close()
+        return rows
+
+    @classmethod
+    def get_ultimo_pago(cls, id_cliente):
+        """Obtiene el último recibo pagado de un cliente."""
+        conn = get_db_connection()
+        row = conn.execute("""
+            SELECT * FROM recibo
+            WHERE id_cliente = ? AND pagado = 1
+            ORDER BY anio DESC, mes DESC
+            LIMIT 1
+        """, (id_cliente,)).fetchone()
+        conn.close()
+        return row
