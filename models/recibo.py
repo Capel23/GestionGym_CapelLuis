@@ -3,7 +3,7 @@ from database import get_db_connection
 from datetime import date
 
 class Recibo:
-    MONTO_MENSUAL = 49.90  # Puedes sacarlo a config si quieres
+    MONTO_MENSUAL = 35.99  # Cuota mensual del gimnasio
 
     def __init__(self, id, id_cliente, mes, anio, monto, pagado=False, fecha_pago=None):
         self.id = id
