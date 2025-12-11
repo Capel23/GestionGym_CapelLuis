@@ -759,7 +759,7 @@ Posibles extensiones del proyecto:
 
 ### 📄 Licencia
 
-Este proyecto fue desarrollado como trabajo académico para el módulo de **Programación** (DAM, 1º curso) en diciembre de 2025.
+Este proyecto fue desarrollado como trabajo académico para el módulo de **Programación** (DAM, 2º curso) en diciembre de 2025.
 
 Si deseas usar este código como referencia, por favor da crédito al autor original.
 
