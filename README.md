@@ -11,10 +11,7 @@
 - [📊 Diagrama Entidad-Relación y Normalización](#-diagrama-entidad-relación-y-normalización)
 - [⚙️ Tecnologías y Arquitectura](#️-tecnologías-y-arquitectura)
 - [🚀 Instrucciones de Ejecución](#-instrucciones-de-ejecución)
-- [🖥️ Descripción de la Interfaz](#️-descripción-de-la-interfaz)
-- [🧩 Lógica de Reservas y Pagos](#-lógica-de-reservas-y-pagos)
-- [📂 Estructura del Código](#-estructura-del-código)
-- [📝 Autor](#-autor)
+
 
 ---
 
