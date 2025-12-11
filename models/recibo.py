@@ -1,9 +1,8 @@
-# models/recibo.py
 from database import get_db_connection
 from datetime import date
 
 class Recibo:
-    MONTO_MENSUAL = 35.99  # Cuota mensual del gimnasio
+    MONTO_MENSUAL = 35.99 
 
     def __init__(self, id, id_cliente, mes, anio, monto, pagado=False, fecha_pago=None):
         self.id = id
@@ -32,7 +31,7 @@ class Recibo:
                 """, (cli['id'], mes, anio, cls.MONTO_MENSUAL))
                 creados += 1
             except:
-                pass  # Ya existe (por UNIQUE)
+                pass 
         conn.commit()
         conn.close()
         return creados

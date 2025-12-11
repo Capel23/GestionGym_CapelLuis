@@ -1,4 +1,3 @@
-# models/sesion.py
 from database import get_db_connection
 from datetime import date
 

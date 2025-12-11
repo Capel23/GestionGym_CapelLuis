@@ -1,4 +1,3 @@
-# ui/login_ui.py
 import tkinter as tk
 from tkinter import ttk, messagebox
 from models.usuario import Usuario
@@ -15,24 +14,22 @@ class LoginUI:
         self.setup_ui()
 
     def setup_ui(self):
-        # Título y tamaño
+      
         self.root.title("🔐 Iniciar Sesión - GymForTheMoment")
         self.root.geometry("420x580")
         
-        # Frame principal
+       
         self.main_frame = ttk.Frame(self.root, padding=20)
         self.main_frame.pack(fill="both", expand=True)
 
-        # Logo/texto
+       
         ttk.Label(self.main_frame, text="🏋️ GymForTheMoment", 
                   style='Header.TLabel').pack(pady=(0, 10))
         ttk.Label(self.main_frame, text="Tu gimnasio, disponible 24/7", 
                   style='Sub.TLabel').pack(pady=(0, 30))
 
-        # Campos de login
         self.create_login_fields()
-
-        # Botones inferiores
+        
         btn_frame = ttk.Frame(self.main_frame)
         btn_frame.pack(pady=20)
         
@@ -42,47 +39,45 @@ class LoginUI:
         self.toggle_btn = ttk.Button(btn_frame, text="✏️ Crear Cuenta", command=self.toggle_mode)
         self.toggle_btn.pack(side="left", padx=5)
         
-        # Toggle tema
+       
         theme_btn = ttk.Button(self.main_frame, text="🌓 Cambiar tema", 
                                command=lambda: toggle_theme(self.root), width=15)
         theme_btn.pack(pady=(10, 0))
 
     def create_login_fields(self):
-        # Usuario
+      
         ttk.Label(self.main_frame, text="Usuario:").pack(anchor="w")
         self.username_var = tk.StringVar()
         self.username_entry = ttk.Entry(self.main_frame, textvariable=self.username_var, width=30)
         self.username_entry.pack(pady=(0, 10))
         self.username_var.trace("w", self.validate_username)
 
-        # Contraseña
+       
         ttk.Label(self.main_frame, text="Contraseña:").pack(anchor="w")
         self.password_var = tk.StringVar()
         self.password_entry = ttk.Entry(self.main_frame, textvariable=self.password_var, show="*", width=30)
         self.password_entry.pack(pady=(0, 20))
         self.password_var.trace("w", self.validate_password)
-        # Bind Enter key para iniciar sesión
+       
         self.password_entry.bind("<Return>", lambda e: self.login())
 
-        # Feedback en tiempo real
         self.user_feedback = ttk.Label(self.main_frame, text="", foreground="#7F8C8D")
         self.user_feedback.pack(anchor="w")
         self.pass_feedback = ttk.Label(self.main_frame, text="", foreground="#7F8C8D")
         self.pass_feedback.pack(anchor="w")
 
     def create_register_fields(self):
-        # Limpiar
+       
         for widget in self.main_frame.winfo_children():
             if widget not in [self.main_frame.winfo_children()[0], self.main_frame.winfo_children()[1]]:
                 widget.destroy()
 
-        # Título
+      
         ttk.Label(self.main_frame, text="📝 Registro de Cliente", 
                   style='Header.TLabel').pack(pady=(0, 10))
         ttk.Label(self.main_frame, text="Completa tus datos", 
                   style='Sub.TLabel').pack(pady=(0, 20))
 
-        # Campos
         fields = [
             ("Nombre:", "name_var"),
             ("Email:", "email_var"),
@@ -95,7 +90,7 @@ class LoginUI:
         for label_text, var_name in fields:
             ttk.Label(self.main_frame, text=label_text).pack(anchor="w")
             var = tk.StringVar()
-            # Ocultar contraseña con asteriscos
+       
             if var_name == "password_var":
                 entry = ttk.Entry(self.main_frame, textvariable=var, show="*", width=30)
             else:
@@ -103,11 +98,9 @@ class LoginUI:
             entry.pack(pady=(0, 8))
             self.entries[var_name] = (var, entry)
             
-            # Bind Enter key en el último campo (contraseña)
             if var_name == "password_var":
                 entry.bind("<Return>", lambda e: self.register())
             
-            # Validación en tiempo real solo para email y usuario
             if var_name == "email_var":
                 var.trace("w", lambda *args, v=var: self.validate_email_field(v))
             elif var_name == "username_var":
@@ -118,7 +111,6 @@ class LoginUI:
         self.user_feedback_reg = ttk.Label(self.main_frame, text="", foreground="#7F8C8D")
         self.user_feedback_reg.pack(anchor="w", pady=(0,15))
 
-        # Botones
         btn_frame = ttk.Frame(self.main_frame)
         btn_frame.pack(pady=10)
         ttk.Button(btn_frame, text="✅ Registrar", command=self.register).pack(side="left", padx=5)
@@ -181,21 +173,17 @@ class LoginUI:
             self.create_register_fields()
         else:
             self.root.title("🔐 Iniciar Sesión - GymForTheMoment")
-            # Destruir el frame principal completamente y recrearlo
             self.main_frame.destroy()
             self.main_frame = ttk.Frame(self.root, padding=20)
             self.main_frame.pack(fill="both", expand=True)
             
-            # Recrear logo/texto
             ttk.Label(self.main_frame, text="🏋️ GymForTheMoment", 
                       style='Header.TLabel').pack(pady=(0, 10))
             ttk.Label(self.main_frame, text="Tu gimnasio, disponible 24/7", 
                       style='Sub.TLabel').pack(pady=(0, 30))
 
-            # Campos de login
             self.create_login_fields()
 
-            # Botones inferiores
             btn_frame = ttk.Frame(self.main_frame)
             btn_frame.pack(pady=20)
             
@@ -205,20 +193,17 @@ class LoginUI:
             self.toggle_btn = ttk.Button(btn_frame, text="✏️ Crear Cuenta", command=self.toggle_mode)
             self.toggle_btn.pack(side="left", padx=5)
             
-            # Toggle tema
             theme_btn = ttk.Button(self.main_frame, text="🌓 Cambiar tema", 
                                    command=lambda: toggle_theme(self.root), width=15)
             theme_btn.pack(pady=(10, 0))
 
     def register(self):
-        # Obtener datos
         name = self.entries["name_var"][0].get().strip()
         email = self.entries["email_var"][0].get().strip()
         phone = self.entries["phone_var"][0].get().strip()
         username = self.entries["username_var"][0].get().strip()
         password = self.entries["password_var"][0].get()
 
-        # Validar
         if not all([name, email, phone, username, password]):
             messagebox.showwarning("⚠️", "Complete todos los campos.")
             return
@@ -232,21 +217,20 @@ class LoginUI:
             messagebox.showerror("❌", "Contraseña mínima: 4 caracteres.")
             return
 
-        # Crear
         try:
             cliente_data = {"nombre": name, "email": email, "telefono": phone}
             user = Usuario.create_cliente(username, password, cliente_data)
             messagebox.showinfo("✅", "¡Cuenta creada con éxito! Ahora inicia sesión.")
-            # Volver explícitamente al modo login y pre-llenar usuario
+            
             self.is_register = False
-            # Destruir el frame principal y recrear todo el UI
+            
             self.main_frame.destroy()
             self.main_frame = ttk.Frame(self.root, padding=20)
             self.main_frame.pack(fill="both", expand=True)
             self.setup_ui()
-            # Pre-llenar usuario y enfocar en contraseña para login rápido
+           
             self.username_var.set(username)
             self.password_var.set("")
-            self.password_entry.focus_set()  # Enfocar en contraseña para que el usuario solo tenga que escribir y dar Enter
+            self.password_entry.focus_set() 
         except Exception as e:
             messagebox.showerror("❌", f"Error al registrar:\n{str(e)}")

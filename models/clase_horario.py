@@ -1,4 +1,3 @@
-# models/clase_horario.py
 from database import get_db_connection
 
 class ClaseHorario:
@@ -59,3 +58,59 @@ class ClaseHorario:
         """, (id_clase, dia_semana, hora_inicio)).fetchone()
         conn.close()
         return row['count'] > 0
+    
+    @classmethod
+    def create(cls, id_clase, dia_semana, hora_inicio):
+        """Crea un nuevo horario para una clase."""
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        try:
+            cursor.execute("""
+                INSERT INTO clase_horario (id_clase, dia_semana, hora_inicio)
+                VALUES (?, ?, ?)
+            """, (id_clase, dia_semana, hora_inicio))
+            conn.commit()
+            horario_id = cursor.lastrowid
+            return cls(horario_id, id_clase, dia_semana, hora_inicio)
+        finally:
+            conn.close()
+    
+    @classmethod
+    def get_by_id(cls, id):
+        """Obtiene un horario por su ID."""
+        conn = get_db_connection()
+        row = conn.execute("SELECT * FROM clase_horario WHERE id = ?", (id,)).fetchone()
+        conn.close()
+        if row:
+            return cls(row['id'], row['id_clase'], row['dia_semana'], row['hora_inicio'])
+        return None
+    
+    @classmethod
+    def update(cls, id, dia_semana, hora_inicio):
+        """Actualiza un horario existente."""
+        conn = get_db_connection()
+        try:
+            conn.execute("""
+                UPDATE clase_horario 
+                SET dia_semana = ?, hora_inicio = ?
+                WHERE id = ?
+            """, (dia_semana, hora_inicio, id))
+            conn.commit()
+            return True
+        except Exception as e:
+            return False
+        finally:
+            conn.close()
+    
+    @classmethod
+    def delete(cls, id):
+        """Elimina un horario de la base de datos."""
+        conn = get_db_connection()
+        try:
+            conn.execute("DELETE FROM clase_horario WHERE id = ?", (id,))
+            conn.commit()
+            return True
+        except Exception as e:
+            return False
+        finally:
+            conn.close()

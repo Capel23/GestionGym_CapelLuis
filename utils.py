@@ -1,9 +1,7 @@
-# utils.py
 import tkinter as tk
 from tkinter import ttk
 import re
 
-# Paleta de colores
 THEMES = {
     'light': {
         'bg': '#F8F9FA',
@@ -38,10 +36,8 @@ def set_theme(root, theme='light'):
     style = ttk.Style()
     style.theme_use('clam')
     
-    # Configuración global
     root.configure(bg=colors['bg'])
     
-    # Estilos ttk
     style.configure('TFrame', background=colors['bg'])
     style.configure('TLabel', background=colors['bg'], foreground=colors['fg'])
     style.configure('Header.TLabel', font=('Segoe UI', 16, 'bold'), foreground=colors['accent'])
@@ -67,7 +63,6 @@ def toggle_theme(root):
     new_theme = 'dark' if _current_theme == 'light' else 'light'
     set_theme(root, new_theme)
 
-# Validaciones
 def validar_email(email):
     return bool(re.match(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$", email))
 

@@ -1,4 +1,3 @@
-# ui/cliente.py
 import tkinter as tk
 from tkinter import ttk, messagebox
 from models.aparato import Aparato
@@ -17,7 +16,7 @@ class ClientePanel:
         self.window.geometry("1500x700")
         self.window.protocol("WM_DELETE_WINDOW", self.on_close)
         
-        # Color scheme
+       
         self.bg_color = "#f0f2f5"
         self.card_color = "#ffffff"
         self.header_color = "#2c3e50"
@@ -26,12 +25,12 @@ class ClientePanel:
         self.setup_ui()
     
     def setup_ui(self):
-        # ============ HEADER ============
+      
         header_frame = tk.Frame(self.window, bg=self.header_color, height=80)
         header_frame.pack(fill="x", side="top")
         header_frame.pack_propagate(False)
         
-        # Título del gimnasio
+       
         title_label = tk.Label(
             header_frame, 
             text="🏋️ Gym For The Moment", 
@@ -41,7 +40,7 @@ class ClientePanel:
         )
         title_label.pack(side="left", padx=20, pady=20)
         
-        # Mensaje de bienvenida
+     
         welcome_label = tk.Label(
             header_frame,
             text=f"👋 Bienvenido, {self.usuario.username}",
@@ -51,7 +50,7 @@ class ClientePanel:
         )
         welcome_label.pack(side="left", padx=20)
         
-        # Botón cerrar sesión
+      
         logout_btn = tk.Button(
             header_frame,
             text="🚪 Cerrar Sesión",
@@ -68,27 +67,27 @@ class ClientePanel:
         )
         logout_btn.pack(side="right", padx=20, pady=20)
         
-        # ============ MAIN CONTENT ============
+       
         main_frame = tk.Frame(self.window, bg=self.bg_color)
         main_frame.pack(fill="both", expand=True, padx=20, pady=20)
         
-        # Container para las 3 secciones
+       
         sections_frame = tk.Frame(main_frame, bg=self.bg_color)
         sections_frame.pack(fill="both", expand=True)
         
-        # Configurar grid con 3 columnas
+       
         sections_frame.columnconfigure(0, weight=1)
         sections_frame.columnconfigure(1, weight=1)
         sections_frame.columnconfigure(2, weight=1)
         sections_frame.rowconfigure(0, weight=1)
         
-        # ============ SECCIÓN 1: APARATOS ============
+       
         self.create_aparatos_section(sections_frame)
         
-        # ============ SECCIÓN 2: CLASES ============
+      
         self.create_clases_section(sections_frame)
         
-        # ============ SECCIÓN 3: PAGOS ============
+      
         self.create_pagos_section(sections_frame)
     
     def create_aparatos_section(self, parent):
@@ -96,7 +95,7 @@ class ClientePanel:
         card = tk.Frame(parent, bg=self.card_color, relief="raised", bd=1)
         card.grid(row=0, column=0, sticky="nsew", padx=5, pady=5)
         
-        # Título de la sección
+       
         title_frame = tk.Frame(card, bg="#27ae60", height=50)
         title_frame.pack(fill="x")
         title_frame.pack_propagate(False)
@@ -109,11 +108,11 @@ class ClientePanel:
             fg="white"
         ).pack(pady=12)
         
-        # Contenido con scroll
+       
         content_wrapper = tk.Frame(card, bg=self.card_color)
         content_wrapper.pack(fill="both", expand=True, padx=10, pady=10)
         
-        # Canvas para scroll
+        
         canvas = tk.Canvas(content_wrapper, bg=self.card_color, highlightthickness=0)
         scrollbar = ttk.Scrollbar(content_wrapper, orient="vertical", command=canvas.yview)
         scrollable_frame = tk.Frame(canvas, bg=self.card_color)
@@ -126,7 +125,7 @@ class ClientePanel:
         canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
         canvas.configure(yscrollcommand=scrollbar.set)
         
-        # Título de filtro
+       
         filter_frame = tk.Frame(scrollable_frame, bg=self.card_color)
         filter_frame.pack(fill="x", pady=(0, 10))
         
@@ -155,17 +154,17 @@ class ClientePanel:
             )
             btn.pack(side="left", padx=2)
         
-        # Grid de máquinas
+       
         self.aparatos_grid = tk.Frame(scrollable_frame, bg=self.card_color)
         self.aparatos_grid.pack(fill="both", expand=True)
         
-        # Cargar máquinas
+      
         self.actualizar_disponibilidad_aparatos()
         
         canvas.pack(side="left", fill="both", expand=True)
         scrollbar.pack(side="right", fill="y")
         
-        # Leyenda
+       
         legend_frame = tk.Frame(card, bg="#f8f9fa", relief="solid", bd=1)
         legend_frame.pack(fill="x", padx=10, pady=(0, 10))
         
@@ -179,14 +178,14 @@ class ClientePanel:
     
     def actualizar_disponibilidad_aparatos(self):
         """Actualiza la visualización de aparatos según el día seleccionado"""
-        # Limpiar grid anterior
+       
         for widget in self.aparatos_grid.winfo_children():
             widget.destroy()
         
         dia = int(self.dia_var.get())
         aparatos = Aparato.listar()
         
-        # Agrupar por tipo
+        
         aparatos_por_tipo = {}
         for ap in aparatos:
             if ap.tipo not in aparatos_por_tipo:
@@ -195,7 +194,7 @@ class ClientePanel:
         
         row = 0
         for tipo, lista in sorted(aparatos_por_tipo.items()):
-            # Título del tipo
+           
             tipo_label = tk.Label(
                 self.aparatos_grid,
                 text=f"▸ {tipo}",
@@ -207,32 +206,32 @@ class ClientePanel:
             tipo_label.grid(row=row, column=0, columnspan=2, sticky="w", pady=(10 if row > 0 else 0, 5), padx=5)
             row += 1
             
-            # Mostrar cada aparato
+          
             col = 0
             for ap in lista:
-                # Calcular disponibilidad
+                
                 horas_ocupadas = Sesion.horas_ocupadas_por_aparato(ap.id, dia)
-                total_franjas = 34  # 6:00 a 23:00 = 17 horas * 2 franjas
+                total_franjas = 34  
                 ocupacion = len(horas_ocupadas)
                 
-                # Determinar color según disponibilidad
+               
                 if ocupacion == 0:
-                    color_bg = "#d4edda"  # Verde claro
+                    color_bg = "#d4edda"
                     color_border = "#28a745"
                     icono = "🟢"
                     estado = "Libre"
                 elif ocupacion < 5:
-                    color_bg = "#fff3cd"  # Amarillo claro
+                    color_bg = "#fff3cd" 
                     color_border = "#ffc107"
                     icono = "🟡"
                     estado = f"{ocupacion} reservas"
                 else:
-                    color_bg = "#f8d7da"  # Rojo claro
+                    color_bg = "#f8d7da"  
                     color_border = "#dc3545"
                     icono = "🔴"
                     estado = "Muy ocupado"
                 
-                # Icono según tipo
+              
                 if tipo == "Cinta":
                     icono_tipo = "🏃"
                 elif tipo == "Bicicleta":
@@ -246,7 +245,7 @@ class ClientePanel:
                 else:
                     icono_tipo = "🏋️"
                 
-                # Card del aparato
+               
                 card_frame = tk.Frame(
                     self.aparatos_grid,
                     bg=color_bg,
@@ -257,7 +256,7 @@ class ClientePanel:
                 )
                 card_frame.grid(row=row, column=col, padx=5, pady=5, sticky="ew")
                 
-                # Contenido del card
+        
                 tk.Label(
                     card_frame,
                     text=f"{icono_tipo} {ap.nombre}",
@@ -274,7 +273,7 @@ class ClientePanel:
                     fg="#495057"
                 ).pack(anchor="w", padx=8, pady=(0, 5))
                 
-                # Botón de reservar
+               
                 btn = tk.Button(
                     card_frame,
                     text="📅 Reservar",
@@ -288,16 +287,16 @@ class ClientePanel:
                 )
                 btn.pack(fill="x", padx=5, pady=(0, 5))
                 
-                # Alternar columnas
+               
                 col = 1 - col
                 if col == 0:
                     row += 1
             
-            # Si terminamos en columna 1, avanzar fila
+           
             if col == 1:
                 row += 1
         
-        # Configurar grid para que las columnas sean iguales
+        
         self.aparatos_grid.columnconfigure(0, weight=1)
         self.aparatos_grid.columnconfigure(1, weight=1)
 
@@ -307,7 +306,7 @@ class ClientePanel:
         card = tk.Frame(parent, bg=self.card_color, relief="raised", bd=1)
         card.grid(row=0, column=1, sticky="nsew", padx=5, pady=5)
         
-        # Título de la sección
+     
         title_frame = tk.Frame(card, bg="#9b59b6", height=50)
         title_frame.pack(fill="x")
         title_frame.pack_propagate(False)
@@ -320,11 +319,11 @@ class ClientePanel:
             fg="white"
         ).pack(pady=12)
         
-        # Contenido con scroll
+      
         content_wrapper = tk.Frame(card, bg=self.card_color)
         content_wrapper.pack(fill="both", expand=True, padx=10, pady=10)
         
-        # Canvas para scroll
+       
         canvas = tk.Canvas(content_wrapper, bg=self.card_color, highlightthickness=0)
         scrollbar = ttk.Scrollbar(content_wrapper, orient="vertical", command=canvas.yview)
         scrollable_frame = tk.Frame(canvas, bg=self.card_color)
@@ -337,17 +336,17 @@ class ClientePanel:
         canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
         canvas.configure(yscrollcommand=scrollbar.set)
         
-        # Grid de clases
+        
         self.clases_grid = tk.Frame(scrollable_frame, bg=self.card_color)
         self.clases_grid.pack(fill="both", expand=True)
         
-        # Cargar clases
+       
         self.actualizar_disponibilidad_clases()
         
         canvas.pack(side="left", fill="both", expand=True)
         scrollbar.pack(side="right", fill="y")
         
-        # Leyenda
+       
         legend_frame = tk.Frame(card, bg="#f8f9fa", relief="solid", bd=1)
         legend_frame.pack(fill="x", padx=10, pady=(0, 10))
         
@@ -361,7 +360,7 @@ class ClientePanel:
     
     def actualizar_disponibilidad_clases(self):
         """Actualiza la visualización de clases con disponibilidad"""
-        # Limpiar grid anterior
+      
         for widget in self.clases_grid.winfo_children():
             widget.destroy()
         
@@ -369,7 +368,7 @@ class ClientePanel:
         
         row = 0
         for clase in clases:
-            # Calcular plazas ocupadas (contar reservas únicas por cliente para esta clase)
+            
             conn = get_db_connection()
             reservas_count = conn.execute("""
                 SELECT COUNT(DISTINCT id_cliente) as count
@@ -381,26 +380,25 @@ class ClientePanel:
             plazas_ocupadas = reservas_count
             plazas_disponibles = clase.capacidad - plazas_ocupadas
             
-            # Determinar color según disponibilidad
+           
             porcentaje_ocupacion = (plazas_ocupadas / clase.capacidad) * 100 if clase.capacidad > 0 else 100
             
             if porcentaje_ocupacion < 50:
-                color_bg = "#d4edda"  # Verde claro
+                color_bg = "#d4edda"  
                 color_border = "#28a745"
                 icono = "🟢"
                 estado = f"{plazas_disponibles} plazas libres"
             elif porcentaje_ocupacion < 90:
-                color_bg = "#fff3cd"  # Amarillo claro
+                color_bg = "#fff3cd"  
                 color_border = "#ffc107"
                 icono = "🟡"
                 estado = f"{plazas_disponibles} plazas"
             else:
-                color_bg = "#f8d7da"  # Rojo claro
+                color_bg = "#f8d7da"  
                 color_border = "#dc3545"
                 icono = "🔴"
                 estado = "Casi completo" if plazas_disponibles > 0 else "Completo"
-            
-            # Icono según tipo de clase
+       
             iconos_clase = {
                 "Yoga": "🧘",
                 "Pilates": "🤸",
@@ -413,7 +411,7 @@ class ClientePanel:
             }
             icono_clase = iconos_clase.get(clase.nombre, "🏃")
             
-            # Card de la clase
+          
             card_frame = tk.Frame(
                 self.clases_grid,
                 bg=color_bg,
@@ -424,7 +422,7 @@ class ClientePanel:
             )
             card_frame.grid(row=row, column=0, columnspan=2, padx=5, pady=5, sticky="ew")
             
-            # Contenido del card - Header
+           
             header_frame = tk.Frame(card_frame, bg=color_bg)
             header_frame.pack(fill="x", padx=8, pady=(5, 0))
             
@@ -444,7 +442,7 @@ class ClientePanel:
                 fg="#495057"
             ).pack(side="right")
             
-            # Info del instructor y duración
+           
             info_frame = tk.Frame(card_frame, bg=color_bg)
             info_frame.pack(fill="x", padx=8, pady=(2, 0))
             
@@ -472,7 +470,7 @@ class ClientePanel:
                 fg="#495057"
             ).pack(side="left", padx=(10, 0))
             
-            # Botón de apuntarse
+        
             btn_enabled = plazas_disponibles > 0
             btn_bg = "#9b59b6" if btn_enabled else "#95a5a6"
             btn_hover = "#8e44ad" if btn_enabled else "#95a5a6"
@@ -494,7 +492,7 @@ class ClientePanel:
             
             row += 1
         
-        # Configurar grid
+       
         self.clases_grid.columnconfigure(0, weight=1)
     
     def create_pagos_section(self, parent):
@@ -502,7 +500,7 @@ class ClientePanel:
         card = tk.Frame(parent, bg=self.card_color, relief="raised", bd=1)
         card.grid(row=0, column=2, sticky="nsew", padx=5, pady=5)
         
-        # Título de la sección
+        
         title_frame = tk.Frame(card, bg="#e67e22", height=50)
         title_frame.pack(fill="x")
         title_frame.pack_propagate(False)
@@ -515,16 +513,16 @@ class ClientePanel:
             fg="white"
         ).pack(pady=12)
         
-        # Contenido
+      
         content = tk.Frame(card, bg=self.card_color)
         content.pack(fill="both", expand=True, padx=15, pady=15)
         
-        # Resumen de cuotas
+       
         recibos = Recibo.listar_por_cliente(self.usuario.id_cliente)
         pendientes = [r for r in recibos if not r['pagado']]
         pagados = [r for r in recibos if r['pagado']]
         
-        # Info cuotas pendientes
+      
         if pendientes:
             alert_frame = tk.Frame(content, bg="#ffe6e6", relief="solid", bd=1)
             alert_frame.pack(fill="x", pady=(0, 10))
@@ -548,7 +546,7 @@ class ClientePanel:
                 fg="#27ae60"
             ).pack(pady=8)
         
-        # Listado de recibos
+      
         tk.Label(
             content,
             text="Historial de cuotas:",
@@ -576,14 +574,14 @@ class ClientePanel:
         self.pagos_listbox.pack(fill="both", expand=True)
         scrollbar.config(command=self.pagos_listbox.yview)
         
-        # Cargar recibos
+      
         for r in recibos:
             estado = "✅ Pagado" if r['pagado'] else "❌ Pendiente"
             self.pagos_listbox.insert(tk.END, f"  {r['mes']}/{r['anio']} - €{r['monto']:.2f}")
             self.pagos_listbox.insert(tk.END, f"     {estado}")
             self.pagos_listbox.insert(tk.END, "")
         
-        # Botones
+        
         btn_frame = tk.Frame(content, bg=self.card_color)
         btn_frame.pack(fill="x", pady=(10, 0))
         
@@ -602,7 +600,7 @@ class ClientePanel:
             command=self.pagar_cuota
         ).pack(fill="x")
         
-        # Info adicional
+     
         tk.Label(
             content,
             text=f"Cuota mensual: €{Recibo.MONTO_MENSUAL:.2f}",
@@ -618,9 +616,9 @@ class ClientePanel:
         ventana.title(f"Reservar {tipo.capitalize()}")
         ventana.geometry("400x350")
         ventana.resizable(False, False)
-        ventana.grab_set()  # Modal
+        ventana.grab_set()  
         
-        # Header
+       
         header = tk.Frame(ventana, bg="#3498db", height=60)
         header.pack(fill="x")
         header.pack_propagate(False)
@@ -634,11 +632,11 @@ class ClientePanel:
             fg="white"
         ).pack(pady=15)
         
-        # Contenido
+       
         content = tk.Frame(ventana, bg="white", padx=20, pady=20)
         content.pack(fill="both", expand=True)
         
-        # Selector de día (igual para ambos tipos)
+       
         tk.Label(
             content,
             text="Selecciona día y hora:",
@@ -691,7 +689,7 @@ class ClientePanel:
         
         actualizar_horas()
         
-        # Botones
+       
         btn_frame = tk.Frame(content, bg="white")
         btn_frame.pack(fill="x", pady=(10, 0))
         
@@ -725,7 +723,7 @@ class ClientePanel:
                         f"¡Reserva confirmada!\n{dia_a_nombre(dia)} a las {hora}"
                     )
                     ventana.destroy()
-                    # Actualizar la vista
+                   
                     if tipo == "clase":
                         self.actualizar_disponibilidad_clases()
                     else:
@@ -772,14 +770,14 @@ class ClientePanel:
             messagebox.showinfo("ℹ️", "No tienes cuotas pendientes.")
             return
         
-        # Ventana de selección
+
         ventana = tk.Toplevel(self.window)
         ventana.title("Pagar Cuota")
         ventana.geometry("400x400")
         ventana.resizable(False, False)
         ventana.grab_set()
         
-        # Header
+       
         header = tk.Frame(ventana, bg="#e67e22", height=60)
         header.pack(fill="x")
         header.pack_propagate(False)
@@ -792,7 +790,7 @@ class ClientePanel:
             fg="white"
         ).pack(pady=15)
         
-        # Contenido
+   
         content = tk.Frame(ventana, bg="white", padx=20, pady=20)
         content.pack(fill="both", expand=True)
         
@@ -803,7 +801,7 @@ class ClientePanel:
             bg="white"
         ).pack(anchor="w", pady=(0, 10))
         
-        # Lista de pendientes
+        
         listbox = tk.Listbox(
             content,
             font=("Segoe UI", 10),
@@ -829,7 +827,7 @@ class ClientePanel:
                 Recibo.marcar_pagado(self.usuario.id_cliente, recibo['mes'], recibo['anio'])
                 messagebox.showinfo("✅", "¡Pago procesado con éxito!")
                 ventana.destroy()
-                # Recargar ventana principal
+                
                 self.window.destroy()
                 ClientePanel(self.window.master, self.usuario)
         

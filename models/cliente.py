@@ -1,4 +1,3 @@
-# models/cliente.py
 from database import get_db_connection
 
 class Cliente:

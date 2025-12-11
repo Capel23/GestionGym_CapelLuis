@@ -1,4 +1,3 @@
-# models/usuario.py
 from database import get_db_connection
 import hashlib
 from models.cliente import Cliente

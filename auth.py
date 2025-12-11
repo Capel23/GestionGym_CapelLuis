@@ -1,11 +1,10 @@
-# auth.py
 """
 Gestión de la sesión actual del usuario.
 Permite saber quién está logueado en cualquier parte de la app.
 """
 
 class SesionActual:
-    _usuario = None  # Singleton-like: un solo usuario a la vez
+    _usuario = None 
 
     @classmethod
     def iniciar(cls, usuario):

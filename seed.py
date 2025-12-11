@@ -125,8 +125,8 @@ def seed_data():
     try:
         creados = Recibo.generar_recibos_mes(mes=12, anio=2025)
         # Marcamos algunos como pagados
-        for i in range(1, 6):  # 5 clientes
-            if i % 2 == 0:  # pares pagados
+        for i in range(1, 6):  
+            if i % 2 == 0: 
                 Recibo.marcar_pagado(i, 12, 2025)
         print(f"✅ {creados} recibos generados para diciembre 2025.")
     except Exception as e:

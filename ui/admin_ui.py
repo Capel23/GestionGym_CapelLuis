@@ -1,4 +1,3 @@
-# ui/admin_ui.py
 import tkinter as tk
 from tkinter import ttk, messagebox, filedialog
 from models.cliente import Cliente
@@ -19,36 +18,34 @@ class AdminPanel:
         self.window.geometry("1200x700")
         self.window.protocol("WM_DELETE_WINDOW", self.on_close)
 
-        # Notebook
         notebook = ttk.Notebook(self.window)
         notebook.pack(fill="both", expand=True, padx=10, pady=10)
 
-        # Pestaña 1: Clientes
+    
         self.tab_clientes = ttk.Frame(notebook)
         notebook.add(self.tab_clientes, text="👥 Clientes")
         self.setup_clientes_tab()
 
-        # Pestaña 2: Reservas
+     
         self.tab_reservas = ttk.Frame(notebook)
         notebook.add(self.tab_reservas, text="📅 Reservas")
         self.setup_reservas_tab()
 
-        # Pestaña 3: Aparatos
+     
         self.tab_aparatos = ttk.Frame(notebook)
         notebook.add(self.tab_aparatos, text="🏋️ Aparatos")
         self.setup_aparatos_tab()
 
-        # Pestaña 4: Clases
         self.tab_clases = ttk.Frame(notebook)
         notebook.add(self.tab_clases, text="🧘 Clases")
         self.setup_clases_tab()
 
-        # Pestaña 5: Pagos
+       
         self.tab_pagos = ttk.Frame(notebook)
         notebook.add(self.tab_pagos, text="💰 Pagos y Recibos")
         self.setup_pagos_tab()
 
-    # ==================== PESTAÑA CLIENTES ====================
+
     def setup_clientes_tab(self):
         frame = ttk.Frame(self.tab_clientes, padding=15)
         frame.pack(fill="both", expand=True)
@@ -89,7 +86,7 @@ class AdminPanel:
         self.cliente_tree.delete(*self.cliente_tree.get_children())
         clientes = Cliente.listar_activos()
         for c in clientes:
-            # Obtener estadísticas
+           
             num_reservas = Sesion.contar_por_cliente(c.id)
             ultimo_pago = Recibo.get_ultimo_pago(c.id)
             estado_pago = "✅ Al día" if ultimo_pago else "⚠️ Sin pagos"
@@ -169,14 +166,13 @@ class AdminPanel:
             messagebox.showerror("❌", "Cliente no encontrado.")
             return
 
-        # Ventana de edición
         win = tk.Toplevel(self.window)
         win.title("✏️ Editar Cliente")
         win.geometry("350x300")
         win.transient(self.window)
         win.grab_set()
 
-        # Campos
+       
         fields = [
             ("Nombre:", "nombre", cliente.nombre),
             ("Email:", "email", cliente.email),
@@ -225,18 +221,15 @@ class AdminPanel:
             except Exception as e:
                 messagebox.showerror("❌", f"Error: {e}")
 
-    # ==================== PESTAÑA RESERVAS (NUEVA) ====================
     def setup_reservas_tab(self):
         frame = ttk.Frame(self.tab_reservas, padding=15)
         frame.pack(fill="both", expand=True)
 
-        # Filtros
         filter_frame = ttk.Frame(frame)
         filter_frame.pack(fill="x", pady=(0, 10))
 
         ttk.Label(filter_frame, text="Filtros:", font=("Segoe UI", 10, "bold")).pack(side="left", padx=5)
 
-        # Filtro de tipo
         ttk.Label(filter_frame, text="Tipo:").pack(side="left", padx=5)
         self.reserva_tipo_var = tk.StringVar(value="todos")
         tipos = [("Todos", "todos"), ("Aparatos", "aparato"), ("Clases", "clase")]
@@ -249,7 +242,7 @@ class AdminPanel:
                 command=self.cargar_reservas
             ).pack(side="left", padx=2)
 
-        # Filtro de día
+     
         ttk.Label(filter_frame, text="Día:").pack(side="left", padx=(15, 5))
         self.reserva_dia_var = tk.StringVar(value="todos")
         dias = [("Todos", "todos"), ("Lun", "0"), ("Mar", "1"), ("Mié", "2"), ("Jue", "3"), ("Vie", "4")]
@@ -262,7 +255,7 @@ class AdminPanel:
                 command=self.cargar_reservas
             ).pack(side="left", padx=2)
 
-        # Tabla de reservas
+       
         cols = ("ID", "Cliente", "Tipo", "Recurso", "Día", "Hora", "Fecha Reserva")
         tree = ttk.Treeview(frame, columns=cols, show="headings", height=15)
         for col in cols:
@@ -278,7 +271,7 @@ class AdminPanel:
         tree.pack(fill="both", expand=True, pady=(0, 10))
         self.reserva_tree = tree
 
-        # Botones
+       
         btn_frame = ttk.Frame(frame)
         btn_frame.pack()
         ttk.Button(btn_frame, text="❌ Cancelar Reserva", command=self.cancelar_reserva).pack(side="left", padx=5)
@@ -290,7 +283,7 @@ class AdminPanel:
     def cargar_reservas(self):
         self.reserva_tree.delete(*self.reserva_tree.get_children())
 
-        # Obtener filtros
+    
         tipo = self.reserva_tipo_var.get()
         dia = self.reserva_dia_var.get()
 
@@ -349,7 +342,7 @@ class AdminPanel:
             messagebox.showerror("❌", "Reserva no encontrada.")
             return
 
-        # Ventana de detalles
+     
         win = tk.Toplevel(self.window)
         win.title("📄 Detalles de Reserva")
         win.geometry("400x350")
@@ -378,7 +371,6 @@ class AdminPanel:
 
         ttk.Button(win, text="Cerrar", command=win.destroy).pack(pady=10)
 
-    # ==================== PESTAÑA APARATOS ====================
     def setup_aparatos_tab(self):
         frame = ttk.Frame(self.tab_aparatos, padding=15)
         frame.pack(fill="both", expand=True)
@@ -394,6 +386,9 @@ class AdminPanel:
         btn_frame = ttk.Frame(frame)
         btn_frame.pack()
         ttk.Button(btn_frame, text="➕ Nuevo", command=self.nuevo_aparato).pack(side="left", padx=5)
+        ttk.Button(btn_frame, text="✏️ Editar", command=self.editar_aparato).pack(side="left", padx=5)
+        ttk.Button(btn_frame, text="❌ Eliminar", command=self.eliminar_aparato).pack(side="left", padx=5)
+        ttk.Button(btn_frame, text="🔄 Actualizar", command=self.cargar_aparatos).pack(side="left", padx=5)
 
         self.cargar_aparatos()
 
@@ -428,8 +423,81 @@ class AdminPanel:
                 messagebox.showerror("❌", f"Error: {e}")
 
         ttk.Button(win, text="✅ Guardar", command=guardar).grid(row=2, column=0, columnspan=2, pady=10)
+    
+    def editar_aparato(self):
+        sel = self.aparato_tree.selection()
+        if not sel:
+            messagebox.showwarning("⚠️", "Seleccione un aparato.")
+            return
+        
+        item = self.aparato_tree.item(sel[0])
+        aparato_id = item['values'][0]
+        aparato = Aparato.get_by_id(aparato_id)
+        
+        if not aparato:
+            messagebox.showerror("❌", "Aparato no encontrado.")
+            return
 
-    # ==================== PESTAÑA CLASES ====================
+        win = tk.Toplevel(self.window)
+        win.title("✏️ Editar Aparato")
+        win.geometry("300x180")
+        win.transient(self.window)
+        win.grab_set()
+
+        tipo_var = tk.StringVar(value=aparato.tipo)
+        nombre_var = tk.StringVar(value=aparato.nombre)
+
+        ttk.Label(win, text="Tipo:").grid(row=0, column=0, padx=20, pady=10, sticky="w")
+        ttk.Entry(win, textvariable=tipo_var, width=20).grid(row=0, column=1, padx=5, pady=10)
+        ttk.Label(win, text="Nombre:").grid(row=1, column=0, padx=20, pady=10, sticky="w")
+        ttk.Entry(win, textvariable=nombre_var, width=20).grid(row=1, column=1, padx=5, pady=10)
+
+        def guardar():
+            try:
+                tipo = tipo_var.get().strip()
+                nombre = nombre_var.get().strip()
+                if not tipo or not nombre:
+                    raise ValueError("Complete todos los campos.")
+                
+                if Aparato.update(aparato_id, tipo, nombre):
+                    messagebox.showinfo("✅", "Aparato actualizado correctamente.")
+                    win.destroy()
+                    self.cargar_aparatos()
+                else:
+                    messagebox.showerror("❌", "Error al actualizar el aparato.")
+            except Exception as e:
+                messagebox.showerror("❌", f"Error: {e}")
+
+        ttk.Button(win, text="✅ Guardar Cambios", command=guardar).grid(row=2, column=0, columnspan=2, pady=10)
+    
+    def eliminar_aparato(self):
+        sel = self.aparato_tree.selection()
+        if not sel:
+            messagebox.showwarning("⚠️", "Seleccione un aparato.")
+            return
+        
+        item = self.aparato_tree.item(sel[0])
+        aparato_id = item['values'][0]
+        aparato_nombre = item['values'][2]
+        
+        if Aparato.tiene_reservas(aparato_id):
+            messagebox.showwarning(
+                "⚠️ No se puede eliminar",
+                f"El aparato '{aparato_nombre}' tiene reservas activas.\n\n"
+                "Cancele primero las reservas antes de eliminar."
+            )
+            return
+        
+        if messagebox.askyesno("⚠️ Confirmar", f"¿eliminar el aparato '{aparato_nombre}'?\n\nEsta acción no se puede deshacer."):
+            try:
+                if Aparato.delete(aparato_id):
+                    messagebox.showinfo("✅", "Aparato eliminado correctamente.")
+                    self.cargar_aparatos()
+                else:
+                    messagebox.showerror("❌", "Error al eliminar el aparato.")
+            except Exception as e:
+                messagebox.showerror("❌", f"Error: {e}")
+
     def setup_clases_tab(self):
         frame = ttk.Frame(self.tab_clases, padding=15)
         frame.pack(fill="both", expand=True)
@@ -445,6 +513,10 @@ class AdminPanel:
         btn_frame = ttk.Frame(frame)
         btn_frame.pack()
         ttk.Button(btn_frame, text="➕ Nueva", command=self.nueva_clase).pack(side="left", padx=5)
+        ttk.Button(btn_frame, text="✏️ Editar", command=self.editar_clase).pack(side="left", padx=5)
+        ttk.Button(btn_frame, text="❌ Eliminar", command=self.eliminar_clase).pack(side="left", padx=5)
+        ttk.Button(btn_frame, text="📅 Gestionar Horarios", command=self.gestionar_horarios_clase).pack(side="left", padx=5)
+        ttk.Button(btn_frame, text="🔄 Actualizar", command=self.cargar_clases).pack(side="left", padx=5)
 
         self.cargar_clases()
 
@@ -491,17 +563,211 @@ class AdminPanel:
                 messagebox.showerror("❌", f"Error: {e}")
 
         ttk.Button(win, text="✅ Guardar", command=guardar).grid(row=4, column=0, columnspan=2, pady=15)
+    
+    def editar_clase(self):
+        sel = self.clase_tree.selection()
+        if not sel:
+            messagebox.showwarning("⚠️", "Seleccione una clase.")
+            return
+        
+        item = self.clase_tree.item(sel[0])
+        clase_id = item['values'][0]
+        clase = Clase.get_by_id(clase_id)
+        
+        if not clase:
+            messagebox.showerror("❌", "Clase no encontrada.")
+            return
 
-    # ==================== PESTAÑA PAGOS (MEJORADA) ====================
+        win = tk.Toplevel(self.window)
+        win.title("✏️ Editar Clase")
+        win.geometry("350x250")
+        win.transient(self.window)
+        win.grab_set()
+
+        vars = {
+            "nombre": tk.StringVar(value=clase.nombre),
+            "instructor": tk.StringVar(value=clase.instructor),
+            "duracion": tk.StringVar(value=str(clase.duracion_min)),
+            "capacidad": tk.StringVar(value=str(clase.capacidad))
+        }
+
+        labels = [("Nombre:", "nombre"), ("Instructor:", "instructor"), 
+                  ("Duración (min):", "duracion"), ("Capacidad:", "capacidad")]
+        for i, (text, key) in enumerate(labels):
+            ttk.Label(win, text=text).grid(row=i, column=0, padx=20, pady=8, sticky="w")
+            ttk.Entry(win, textvariable=vars[key], width=20).grid(row=i, column=1, padx=5, pady=8)
+
+        def guardar():
+            try:
+                nombre = vars["nombre"].get().strip()
+                instructor = vars["instructor"].get().strip()
+                duracion = int(vars["duracion"].get())
+                capacidad = int(vars["capacidad"].get())
+                
+                if not nombre or not instructor:
+                    raise ValueError("Complete todos los campos.")
+                
+                if Clase.update(clase_id, nombre, instructor, duracion, capacidad):
+                    messagebox.showinfo("✅", "Clase actualizada correctamente.")
+                    win.destroy()
+                    self.cargar_clases()
+                else:
+                    messagebox.showerror("❌", "Error al actualizar la clase.")
+            except Exception as e:
+                messagebox.showerror("❌", f"Error: {e}")
+
+        ttk.Button(win, text="✅ Guardar Cambios", command=guardar).grid(row=4, column=0, columnspan=2, pady=15)
+    
+    def eliminar_clase(self):
+        sel =self.clase_tree.selection()
+        if not sel:
+            messagebox.showwarning("⚠️", "Seleccione una clase.")
+            return
+        
+        item = self.clase_tree.item(sel[0])
+        clase_id = item['values'][0]
+        clase_nombre = item['values'][1]
+        
+        if Clase.tiene_reservas(clase_id):
+            messagebox.showwarning(
+                "⚠️ No se puede eliminar",
+                f"La clase '{clase_nombre}' tiene reservas activas.\n\n"
+                "Cancele primero las reservas antes de eliminar."
+            )
+            return
+        
+        if messagebox.askyesno("⚠️ Confirmar", f"¿eliminar la clase '{clase_nombre}'?\n\nEsta acción también eliminará todos sus horarios."):
+            try:
+                if Clase.delete(clase_id):
+                    messagebox.showinfo("✅", "Clase eliminada correctamente.")
+                    self.cargar_clases()
+                else:
+                    messagebox.showerror("❌", "Error al eliminar la clase.")
+            except Exception as e:
+                messagebox.showerror("❌", f"Error: {e}")
+    
+    def gestionar_horarios_clase(self):
+        sel = self.clase_tree.selection()
+        if not sel:
+            messagebox.showwarning("⚠️", "Seleccione una clase.")
+            return
+        
+        item = self.clase_tree.item(sel[0])
+        clase_id = item['values'][0]
+        clase_nombre = item['values'][1]
+        
+        ventana = tk.Toplevel(self.window)
+        ventana.title(f"📅 Horarios de '{clase_nombre}'")
+        ventana.geometry("500x450")
+        ventana.transient(self.window)
+        ventana.grab_set()
+        
+        header = tk.Frame(ventana, bg="#9b59b6", height=50)
+        header.pack(fill="x")
+        header.pack_propagate(False)
+        
+        tk.Label(
+            header,
+            text=f"📅 Horarios de {clase_nombre}",
+            font=("Segoe UI", 12, "bold"),
+            bg="#9b59b6",
+            fg="white"
+        ).pack(pady=12)
+        
+        content = tk.Frame(ventana, padx=20, pady=20)
+        content.pack(fill="both", expand=True)
+        
+        cols = ("ID", "Día", "Hora")
+        tree = ttk.Treeview(content, columns=cols, show="headings", height=12)
+        for col in cols:
+            tree.heading(col, text=col)
+            if col == "ID":
+                tree.column(col, width=50)
+            else:
+                tree.column(col, width=150)
+        tree.pack(fill="both", expand=True, pady=(0, 10))
+        
+        from models.clase_horario import ClaseHorario
+        
+        def cargar_horarios():
+            tree.delete(*tree.get_children())
+            horarios = ClaseHorario.listar_por_clase(clase_id)
+            for h in horarios:
+                dia_nombre = dia_a_nombre(h.dia_semana)
+                tree.insert("", "end", values=(h.id, dia_nombre, h.hora_inicio))
+        
+        def nuevo_horario():
+            win_horario = tk.Toplevel(ventana)
+            win_horario.title("➕ Nuevo Horario")
+            win_horario.geometry("300x200")
+            win_horario.transient(ventana)
+            win_horario.grab_set()
+            
+            ttk.Label(win_horario, text="Día de la semana:").grid(row=0, column=0, padx=20, pady=10, sticky="w")
+            dia_var = tk.StringVar(value="0")
+            dias = [("Lunes", "0"), ("Martes", "1"), ("Miércoles", "2"), ("Jueves", "3"), ("Viernes", "4")]
+            dia_combo = ttk.Combobox(win_horario, textvariable=dia_var, values=[d[1] for d in dias], state="readonly", width=18)
+            dia_combo.grid(row=0, column=1, padx=5, pady=10)
+            dia_combo.set("0")
+            
+            ttk.Label(win_horario, text="Hora (HH:MM):").grid(row=1, column=0, padx=20, pady=10, sticky="w")
+            hora_var = tk.StringVar(value="18:00")
+            ttk.Entry(win_horario, textvariable=hora_var, width=20).grid(row=1, column=1, padx=5, pady=10)
+            
+            def guardar_horario():
+                try:
+                    dia = int(dia_var.get())
+                    hora = hora_var.get().strip()
+                    
+                    if ClaseHorario.existe_horario(clase_id, dia, hora):
+                        messagebox.showwarning("⚠️", "Ya existe un horario para este día y hora.")
+                        return
+                    
+                    ClaseHorario.create(clase_id, dia, hora)
+                    messagebox.showinfo("✅", "Horario creado correctamente.")
+                    win_horario.destroy()
+                    cargar_horarios()
+                except Exception as e:
+                    messagebox.showerror("❌", f"Error: {e}")
+            
+            ttk.Button(win_horario, text="✅ Guardar", command=guardar_horario).grid(row=2, column=0, columnspan=2, pady=15)
+        
+        def eliminar_horario():
+            sel_horario = tree.selection()
+            if not sel_horario:
+                messagebox.showwarning("⚠️", "Seleccione un horario.")
+                return
+            
+            item_horario = tree.item(sel_horario[0])
+            horario_id = item_horario['values'][0]
+            
+            if messagebox.askyesno("⚠️ Confirmar", "¿eliminar este horario?"):
+                try:
+                    if ClaseHorario.delete(horario_id):
+                        messagebox.showinfo("✅", "Horario eliminado correctamente.")
+                        cargar_horarios()
+                    else:
+                        messagebox.showerror("❌", "Error al eliminar el horario.")
+                except Exception as e:
+                    messagebox.showerror("❌", f"Error: {e}")
+        
+        cargar_horarios()
+        
+        btn_frame = tk.Frame(content)
+        btn_frame.pack(fill="x", pady=(0, 0))
+        ttk.Button(btn_frame, text="➕ Nuevo Horario", command=nuevo_horario).pack(side="left", padx=5)
+        ttk.Button(btn_frame, text="❌ Eliminar Horario", command=eliminar_horario).pack(side="left", padx=5)
+        ttk.Button(btn_frame, text="Cerrar", command=ventana.destroy).pack(side="right", padx=5)
+
     def setup_pagos_tab(self):
         frame = ttk.Frame(self.tab_pagos, padding=15)
         frame.pack(fill="both", expand=True)
 
-        # Controles y filtros
+       
         control_frame = ttk.Frame(frame)
         control_frame.pack(fill="x", pady=(0,15))
 
-        # Filtro de estado
+     
         ttk.Label(control_frame, text="Estado:", font=("Segoe UI", 10, "bold")).pack(side="left", padx=5)
         self.pago_estado_var = tk.StringVar(value="todos")
         estados = [("Todos", "todos"), ("Pendientes", "pendiente"), ("Pagados", "pagado")]
@@ -514,7 +780,7 @@ class AdminPanel:
                 command=self.cargar_pagos
             ).pack(side="left", padx=2)
 
-        # Selector mes/año
+        
         ttk.Label(control_frame, text="Mes:", font=("Segoe UI", 10, "bold")).pack(side="left", padx=(15, 5))
         self.pago_mes_var = tk.StringVar(value="todos")
         meses_opciones = ["todos"] + [str(i) for i in range(1, 13)]
@@ -526,14 +792,14 @@ class AdminPanel:
         
         ttk.Button(control_frame, text="🔍 Filtrar", command=self.cargar_pagos).pack(side="left", padx=10)
 
-        # Botones de acción
+        
         action_frame = ttk.Frame(frame)
         action_frame.pack(fill="x", pady=(0, 10))
         ttk.Button(action_frame, text="💰 Marcar como Pagado", command=self.marcar_como_pagado).pack(side="left", padx=5)
         ttk.Button(action_frame, text="➕ Generar Recibos del Mes", command=self.generar_recibos_mes).pack(side="left", padx=5)
         ttk.Button(action_frame, text="📤 Exportar CSV", command=self.exportar_pagos_csv).pack(side="right", padx=5)
 
-        # Tabla
+       
         cols = ("ID", "Cliente", "Email", "Mes", "Año", "Monto", "Estado", "Fecha Pago")
         tree = ttk.Treeview(frame, columns=cols, show="headings", height=15)
         for col in cols:
@@ -554,7 +820,7 @@ class AdminPanel:
     def cargar_pagos(self):
         self.pago_tree.delete(*self.pago_tree.get_children())
 
-        # Obtener filtros
+      
         estado = self.pago_estado_var.get()
         mes = self.pago_mes_var.get()
         anio = self.pago_anio_var.get()
@@ -602,7 +868,7 @@ class AdminPanel:
             return
 
         if messagebox.askyesno("💰 Confirmar", f"¿Marcar como pagado el recibo de {cliente_nombre} ({mes}/{anio})?"):
-            # Obtener ID de cliente desde el recibo
+           
             from database import get_db_connection
             conn = get_db_connection()
             id_cliente = conn.execute("SELECT id_cliente FROM recibo WHERE id = ?", (recibo_id,)).fetchone()['id_cliente']
