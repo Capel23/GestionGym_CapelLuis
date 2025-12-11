@@ -6,7 +6,7 @@ from models.clase import Clase
 from models.recibo import Recibo
 from models.sesion import Sesion
 from models.usuario import Usuario
-from utils import dia_a_nombre
+from utils import dia_a_nombre, set_window_icon
 import csv
 from datetime import date
 
@@ -17,6 +17,10 @@ class AdminPanel:
         self.window.title(f"🛠️ {usuario.username} | Panel Administrador")
         self.window.geometry("1200x700")
         self.window.protocol("WM_DELETE_WINDOW", self.on_close)
+        
+        # Configurar icono
+        set_window_icon(self.window)
+
 
         notebook = ttk.Notebook(self.window)
         notebook.pack(fill="both", expand=True, padx=10, pady=10)

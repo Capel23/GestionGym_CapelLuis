@@ -1,10 +1,9 @@
 # main.py
 from database import init_db
 from ui.login import LoginUI
-from utils import set_theme
+from utils import set_theme, set_window_icon
 import tkinter as tk
-import os
-from pathlib import Path
+
 
 def main():
     init_db()
@@ -14,12 +13,8 @@ def main():
     root.geometry("420x580")
     root.resizable(False, False)
     
-    icon_path = Path(__file__).parent / "assets" / "gym_icon.ico"
-    if icon_path.exists():
-        try:
-            root.iconbitmap(icon_path)
-        except Exception as e:
-            print(f"⚠️ No se pudo cargar el icono: {e}")
+    # Configurar icono
+    set_window_icon(root)
     
     set_theme(root, 'light')
     

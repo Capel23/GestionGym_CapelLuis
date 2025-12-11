@@ -4,7 +4,7 @@ from models.aparato import Aparato
 from models.clase import Clase
 from models.sesion import Sesion
 from models.recibo import Recibo
-from utils import dia_a_nombre
+from utils import dia_a_nombre, set_window_icon
 from auth import SesionActual
 from database import get_db_connection
 
@@ -15,6 +15,9 @@ class ClientePanel:
         self.window.title(f"GymForTheMoment - Panel de {usuario.username}")
         self.window.geometry("1500x700")
         self.window.protocol("WM_DELETE_WINDOW", self.on_close)
+        
+        # Configurar icono
+        set_window_icon(self.window)
         
        
         self.bg_color = "#f0f2f5"

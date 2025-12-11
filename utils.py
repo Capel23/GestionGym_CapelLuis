@@ -1,6 +1,7 @@
 import tkinter as tk
 from tkinter import ttk
 import re
+from pathlib import Path
 
 THEMES = {
     'light': {
@@ -75,3 +76,26 @@ def validar_hora_30min(hora):
 def dia_a_nombre(dia):
     dias = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes"]
     return dias[dia] if 0 <= dia <= 4 else "Desconocido"
+
+def set_window_icon(window):
+    """Configura el icono del gimnasio en la ventana proporcionada.
+    
+    Args:
+        window: Instancia de tk.Tk o tk.Toplevel
+    """
+    try:
+        # Buscar el icono en la carpeta assets
+        # Si window es Toplevel, necesitamos buscar desde la raíz del proyecto
+        if hasattr(window, 'master') and window.master:
+            # Es un Toplevel, buscar desde el directorio del script principal
+            icon_path = Path(__file__).parent.parent / "assets" / "gym_icon.ico"
+        else:
+            # Es la ventana raíz
+            icon_path = Path(__file__).parent / "assets" / "gym_icon.ico"
+        
+        if icon_path.exists():
+            window.iconbitmap(icon_path)
+        else:
+            print(f"⚠️ Icono no encontrado en: {icon_path}")
+    except Exception as e:
+        print(f"⚠️ No se pudo cargar el icono: {e}")
