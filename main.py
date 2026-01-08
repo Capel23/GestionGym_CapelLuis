@@ -13,7 +13,6 @@ def main():
     root.geometry("420x580")
     root.resizable(False, False)
     
-    # Configurar icono
     set_window_icon(root)
     
     set_theme(root, 'light')

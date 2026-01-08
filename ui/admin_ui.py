@@ -18,7 +18,7 @@ class AdminPanel:
         self.window.geometry("1200x700")
         self.window.protocol("WM_DELETE_WINDOW", self.on_close)
         
-        # Configurar icono
+        
         set_window_icon(self.window)
 
 
